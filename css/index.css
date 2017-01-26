@@ -1,0 +1,7 @@
+#mainCanvas {
+  width: 640px;
+  height: 480px;
+  border:1px solid #000;
+  margin:auto;
+  top: calc(100% - 240px);
+}
