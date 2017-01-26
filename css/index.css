@@ -2,6 +2,7 @@
   width: 640px;
   height: 480px;
   border:1px solid #000;
-  margin:auto;
-  top: calc(100% - 240px);
+  position:absolute;
+  top: 20px;
+  left: calc(50% - 320px);
 }
