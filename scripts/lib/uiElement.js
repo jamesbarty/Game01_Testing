@@ -1,4 +1,4 @@
-define('lib/uiElement', [], function() {
+define([], function() {
   'use strict';
 
   function UiElement(top, left) {

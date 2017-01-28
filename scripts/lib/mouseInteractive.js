@@ -1,4 +1,4 @@
-define('lib/mouseInteractive', ['lib/uiElement'], function(UiElement) {
+define(['lib/uiElement'], function(UiElement) {
   'use strict';
 
   function MouseInteractive(top, left, active) {
