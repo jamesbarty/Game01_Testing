@@ -19,6 +19,9 @@
 * onMouseLeave()
 * active - whether or not it is listening to events
 
+* MouseEnter/Leave will never propagate
+* MouseEnter/Leave is an artifact of MouseMove
+
 ### KeyboardInteractive : MouseInteractive
 * onKeyDown()
 * onKeyUp()
