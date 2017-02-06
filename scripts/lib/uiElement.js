@@ -1,6 +1,6 @@
 define([
-  'lib/DrawThroughContext'
-], function(DrawThroughContext) {
+  'lib/drawThroughContext'
+], function(drawThroughContext) {
   'use strict';
 
   var uniqueId = 0;
@@ -98,7 +98,7 @@ define([
     this.draw(ctx);
     for (var i = 0; i < this.children.length; i++) {
       var child = this.children[i];
-      child._draw(DrawThroughContext(ctx, child.truePosition.left, child.truePosition.top, child.size.width, child.size.height));
+      child._draw(drawThroughContext(ctx, child.truePosition.left, child.truePosition.top, child.size.width, child.size.height));
     }
   };
 
