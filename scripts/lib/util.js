@@ -1,7 +1,7 @@
 define([], function() {
   'use strict';
 
-  return {
+  var Util = {
     pointInRect: function(px, py, x, y, w, h) {
       if (px < x ||
           px > x + w ||

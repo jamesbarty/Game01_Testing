@@ -1,4 +1,4 @@
-define([], function() {
+define(function() {
   'use strict';
 
   function DrawThroughContext(ctx, offsetX, offsetY, width, height) {
@@ -19,7 +19,7 @@ define([], function() {
       setFillStyle: function(style) {
         ctx.fillStyle = style;
       }
-    }
+    };
   }
 
   return DrawThroughContext;
