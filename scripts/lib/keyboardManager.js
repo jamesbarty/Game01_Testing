@@ -7,7 +7,7 @@ define([], function() {
 
     return {
       getKeyState: function(key) {
-        return state;
+        return state[key];
       },
       onKeyDown: function(e) {
         console.log(e.keyCode);

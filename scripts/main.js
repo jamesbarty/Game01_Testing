@@ -3,8 +3,9 @@ require([
   'lib/mouseInteractive',
   'lib/mouseEvent',
   'lib/drawThroughContext',
-  'lib/keyboardManager'
-], function(UiElement, MouseInteractive, MouseEvt, DrawThroughContext, KeyboardManager){
+  'lib/keyboardManager',
+  'lib/imageManager'
+], function(UiElement, MouseInteractive, MouseEvt, DrawThroughContext, KeyboardManager, ImageManager){
   'use strict';
   var FPS = 60;
 
@@ -104,10 +105,48 @@ require([
     KeyboardManager.onKeyUp(e);
   }
 
-  var gameLoop = setInterval(function() {
-    //update();
-    ctx.clearRect(0,0,640,480);
-    topLevel._draw(ctx);
-  }, 1000 / FPS);
+  var old = performance.now();
+  var gameFunc = function() {
+    //console.log('loaded');
+    //console.log(performance.now() - old);
+    //var gameLoop = setInterval(function() {
+      //update();
+      //ctx.clearRect(0,0,640,480);
+      //topLevel._draw(ctx);
+      
+      var a = [];
+      var o = {};
+      for (var i = 0; i < 10000; i++) {
+        a[i] = i;
+        o[i] = i;
+        //ctx.drawImage(ImageManager.image['fawnt'], 0, 0);
+        //ctx.globalCompositeOperation = 'source-in';
+        //ctx.fillStyle = "blue";
+        //ctx.fillRect(0, 0, 640, 50);
+        //ctx.globalCompositeOperation = 'source-over';
+      }
+      var old = performance.now();
+      var sum = 0;
+      for (var i = 0; i < 10000; i++) {
+        sum += o[i];
+      }
+      console.log(performance.now() - old);
+    //}, 1000 / FPS);
+  };
+
+  ImageManager.addImage('back1.jpg', 'one');
+  ImageManager.addImage('back2.jpg', 'two');
+  ImageManager.addImage('back3.jpg', 'three');
+  ImageManager.addImage('back4.jpg', 'four');
+  ImageManager.addImage('back5.jpg', 'five');
+  ImageManager.addImage('back6.jpg', 'six');
+  ImageManager.addImage('back7.jpg', 'seven');
+  ImageManager.addImage('back8.jpg', 'eight');
+  ImageManager.addImage('back9.jpg', 'nine');
+  //ImageManager.addImage('large.jpg', 'ten');
+  //ImageManager.addImage('large.png', 'eleven');
+  ImageManager.addImage('fawnt_7pt.png', 'fawnt');
+
+  ImageManager.loadImages(gameFunc);
 
 });
