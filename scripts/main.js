@@ -4,8 +4,18 @@ require([
   'lib/mouseEvent',
   'lib/drawThroughContext',
   'lib/keyboardManager',
-  'lib/imageManager'
-], function(UiElement, MouseInteractive, MouseEvt, DrawThroughContext, KeyboardManager, ImageManager){
+  'lib/imageManager',
+  'lib/coreGfxEng',
+  'lib/constants'
+], function(UiElement,
+            MouseInteractive,
+            MouseEvt,
+            DrawThroughContext,
+            KeyboardManager,
+            ImageManager,
+            CoreGfxEng,
+            constants)
+{
   'use strict';
   var FPS = 60;
 
@@ -41,6 +51,7 @@ require([
       height: 100
     }
   });
+
   newThing.onMouseEnter = function(e) {
     console.log('parent enter');
     //console.log(e);
@@ -75,8 +86,8 @@ require([
   newThing.addChild(newThing2);
 
 
-  var canvas = document.getElementById('mainCanvas'),
-      ctx = canvas.getContext('2d');
+  var canvas = document.getElementById('mainCanvas');
+
   canvas.addEventListener('mousedown', onMouseDown);
   canvas.addEventListener('mouseup', onMouseUp);
   canvas.addEventListener('mousemove', onMouseMove);
@@ -112,8 +123,8 @@ require([
     //var gameLoop = setInterval(function() {
       //update();
       //ctx.clearRect(0,0,640,480);
-      //topLevel._draw(ctx);
-      
+      topLevel._draw(ctx);
+
       var a = [];
       var o = {};
       for (var i = 0; i < 10000; i++) {
@@ -146,7 +157,14 @@ require([
   //ImageManager.addImage('large.jpg', 'ten');
   //ImageManager.addImage('large.png', 'eleven');
   ImageManager.addImage('fawnt_7pt.png', 'fawnt');
+  ImageManager.addImage('res/ayylmao.png', constants.MAIN_SPRITE_SHEET_ID);
 
   ImageManager.loadImages(gameFunc);
+
+  var coreGfxEng = CoreGfxEng(canvas, ImageManager);
+  var concCtx = coreGfxEng.createConcreteContext(constants.LOGICAL_CANVAS_WIDTH, constants.LOGICAL_CANVAS_HEIGHT);
+  var mainCtx = coreGfxEng.getRootConcreteContext();
+  concCtx.pushDrawFillRect(0, 1, 1, 7, 128, 200, 64, 255);
+  mainCtx.pushDrawConcrete(0, 0, concCtx.width, concCtx.height, concCtx);
 
 });
