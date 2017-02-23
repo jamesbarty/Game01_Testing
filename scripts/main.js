@@ -4,8 +4,11 @@ require([
   'lib/mouseEvent',
   'lib/drawThroughContext',
   'lib/keyboardManager',
-  'lib/imageManager'
-], function(UiElement, MouseInteractive, MouseEvt, DrawThroughContext, KeyboardManager, ImageManager){
+  'lib/imageManager',
+  'lib/spriteSheet',
+  'lib/sprite',
+  'lib/label'
+], function(UiElement, MouseInteractive, MouseEvt, DrawThroughContext, KeyboardManager, ImageManager, SpriteSheet, Sprite, Label){
   'use strict';
   var FPS = 60;
 
@@ -75,6 +78,10 @@ require([
   newThing.addChild(newThing2);
 
 
+  
+  
+
+
   var canvas = document.getElementById('mainCanvas'),
       ctx = canvas.getContext('2d');
   canvas.addEventListener('mousedown', onMouseDown);
@@ -107,14 +114,69 @@ require([
 
   var old = performance.now();
   var gameFunc = function() {
+
+    var guySpriteSheet = new SpriteSheet({
+    source: ImageManager.image['spriteSheet'],
+    frames:[
+      [0, 0, 12, 17],
+      [12, 0, 12, 17],
+      [24, 0, 12, 17],
+      [36, 0, 12, 17],
+      [48, 0, 12, 17]
+    ],
+    animations: {
+      idle: {
+        looping: false,
+        frames: [0]
+      },
+      runRight: {
+        looping: false,
+        frameDuration: 100,
+        frames: [1,2,3,4,3,2],
+        transition: 'idle'
+      }
+    }
+  });
+
+  var guy = new Sprite({
+    spriteSheet: guySpriteSheet,
+    position: {
+      left: 100,
+      top: 100
+    },
+    size: {
+      width: 50,
+      height: 50
+    }
+  });
+  guy.onMouseEnter = function() {
+    console.log('asdsad');
+  }
+  guy.gotoAndPlay('runRight');
+  topLevel.addChild(guy);
+
+  var labe = new Label({
+    text: 'weee',
+    size: {
+      width: 300,
+      height: 100
+    },
+    wrapping: 'word',
+    textHAlign: 'center',
+    textVAlign: 'center'
+  });
+  topLevel.addChild(labe);
     //console.log('loaded');
     //console.log(performance.now() - old);
-    //var gameLoop = setInterval(function() {
-      //update();
-      //ctx.clearRect(0,0,640,480);
-      //topLevel._draw(ctx);
+    var lastTime = performance.now();
+    var gameLoop = setInterval(function() {
+      var curTime = performance.now();
+      topLevel._update(curTime - lastTime);
+      lastTime = curTime;
+      ctx.clearRect(0,0,640,480);
+      topLevel._draw(ctx);
       
-      var a = [];
+      /*var a = [];
       var o = {};
       for (var i = 0; i < 10000; i++) {
         a[i] = i;
@@ -129,12 +191,14 @@ require([
       var sum = 0;
       for (var i = 0; i < 10000; i++) {
         sum += o[i];
-      }
-      console.log(performance.now() - old);
-    //}, 1000 / FPS);
+      }*/
+
+      
+      //console.log(performance.now() - old);
+    }, 1000 / FPS);
   };
 
-  ImageManager.addImage('back1.jpg', 'one');
+  /*ImageManager.addImage('back1.jpg', 'one');
   ImageManager.addImage('back2.jpg', 'two');
   ImageManager.addImage('back3.jpg', 'three');
   ImageManager.addImage('back4.jpg', 'four');
@@ -142,10 +206,11 @@ require([
   ImageManager.addImage('back6.jpg', 'six');
   ImageManager.addImage('back7.jpg', 'seven');
   ImageManager.addImage('back8.jpg', 'eight');
-  ImageManager.addImage('back9.jpg', 'nine');
+  ImageManager.addImage('back9.jpg', 'nine');*/
   //ImageManager.addImage('large.jpg', 'ten');
   //ImageManager.addImage('large.png', 'eleven');
   ImageManager.addImage('fawnt_7pt.png', 'fawnt');
+  ImageManager.addImage('anim.png', 'spriteSheet');
 
   ImageManager.loadImages(gameFunc);
 

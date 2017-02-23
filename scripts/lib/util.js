@@ -14,6 +14,10 @@ define([], function() {
 
     isFunction: function(prop) {
       return typeof(prop) === 'function' ;
+    },
+
+    randBetween: function(min, max) {
+      return Math.floor(Math.random() * (max - min + 1)) + min;
     }
   }
 

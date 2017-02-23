@@ -5,15 +5,12 @@ define([
 
   function DrawThroughContext(ctx, offsetX, offsetY, width, height)
   {
-    DrawTarget.call(this, width, height);
-    this.x = offsetX;
-    this.y = offsetY;
-    this.ctx = ctx;
-  }
+   //DrawTarget.call(this, width, height);
+    //this.x = offsetX;
+    //this.y = offsetY;
+    //this.ctx = ctx;
 
-  DrawThroughContext.prototype = Object.create(DrawTarget1.prototype);
-
-  return {
+    return {
     fillRect: function(x, y, w, h) {
       var absX = x + offsetX,
        absY = y + offsetY;
@@ -29,8 +26,18 @@ define([
     },
     setFillStyle: function(style) {
       ctx.fillStyle = style;
+    },
+    drawImage: function(image, x, y, w, h, dx, dy, dw, dh) {
+      ctx.drawImage(image, x, y, w, h, dx, dy, dw, dh)
+    },
+    fillText: function(text, x, y) {
+      ctx.fillText(text, x, y);
     }
   };
+  }
+
+  DrawThroughContext.prototype = Object.create(DrawTarget.prototype);
+
 
   return DrawThroughContext;
 });

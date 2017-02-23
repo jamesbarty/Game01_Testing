@@ -1,6 +1,7 @@
 define([
-  'lib/drawThroughContext'
-], function(drawThroughContext) {
+  'lib/drawThroughContext',
+  'lib/util'
+], function(drawThroughContext, Util) {
   'use strict';
 
   var uniqueId = 0;
@@ -105,6 +106,21 @@ define([
   UiElement.prototype.draw = function(ctx) {
     ctx.fillStyle = 'rgba(0,0,0,0.2)';
     ctx.fillRect(0, 0, this.size.width, this.size.height);
+  };
+
+  UiElement.prototype._update = function(deltaTime) {
+    if (Util.isFunction(this.update)) {
+      this.update(deltaTime)
+    }
+    for (var i = 0; i < this.children.length; i++) {
+      var child = this.children[i];
+      child._update(deltaTime);
+    }
+  };
+
+  // remove and perform checking
+  UiElement.prototype.update = function() {
+
   };
 
   return UiElement;
