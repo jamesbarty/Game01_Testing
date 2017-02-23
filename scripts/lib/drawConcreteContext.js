@@ -21,7 +21,7 @@ define([
   DrawConcreteContext.prototype.pushDrawFillRect = function(x, y, w, h, r, g, b, a)
   { this.giftbox.pushDrawFillRect(x, y, w, h, r, g, b, a); };
 
-  DrawConcreteContext.prototype.pushDrawSprite = function(xDest, yDest, xSrc, ySrc, wSrc, hSrc, scale)
+  DrawConcreteContext.prototype.pushDrawSprite = function(xDest, yDest, wDest, hDest, xSrc, ySrc, wSrc, hSrc)
   { this.giftbox.pushDrawSprite(xDest, yDest, wDest, hDest, xSrc, ySrc, wSrc, hSrc); };
 
   DrawConcreteContext.prototype.pushDrawTextLine = function(x, y, str)

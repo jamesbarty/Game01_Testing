@@ -157,14 +157,14 @@ require([
   //ImageManager.addImage('large.jpg', 'ten');
   //ImageManager.addImage('large.png', 'eleven');
   ImageManager.addImage('fawnt_7pt.png', 'fawnt');
-  ImageManager.addImage('res/ayylmao.png', constants.MAIN_SPRITE_SHEET_ID);
+  ImageManager.addImage('res/index.jpg', constants.MAIN_SPRITE_SHEET_ID); // 512x512 for demo
 
   ImageManager.loadImages(gameFunc);
 
   var coreGfxEng = CoreGfxEng(canvas, ImageManager);
   var concCtx = coreGfxEng.createConcreteContext(constants.LOGICAL_CANVAS_WIDTH, constants.LOGICAL_CANVAS_HEIGHT);
   var mainCtx = coreGfxEng.getRootConcreteContext();
-  concCtx.pushDrawFillRect(0, 1, 1, 7, 128, 200, 64, 255);
+  concCtx.pushDrawSprite(0, 0, 128, 128, 128, 128, 256, 256);
   mainCtx.pushDrawConcrete(0, 0, concCtx.width, concCtx.height, concCtx);
 
 });

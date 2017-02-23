@@ -20,6 +20,8 @@ define([
 
     var SCREEN_CANVAS_WIDTH = constants.LOGICAL_CANVAS_WIDTH * constants.LOGICAL_PIXEL_EDGE;
     var SCREEN_CANVAS_HEIGHT = constants.LOGICAL_CANVAS_HEIGHT * constants.LOGICAL_PIXEL_EDGE;
+    var MAIN_SPRITESHEET_W;
+    var MAIN_SPRITESHEET_H;
 
 
 
@@ -140,6 +142,8 @@ define([
       if (!(domImgSrc instanceof HTMLImageElement))
         throw "Image is of incorrect type";
 
+      MAIN_SPRITESHEET_W = domImgSrc.width;
+      MAIN_SPRITESHEET_H = domImgSrc.height;
       var tex = glCtx.createTexture();
       glCtx.bindTexture(glCtx.TEXTURE_2D, tex);
       glCtx.texImage2D(glCtx.TEXTURE_2D, 0, glCtx.RGBA, glCtx.RGBA, glCtx.UNSIGNED_BYTE, domImgSrc);
@@ -240,6 +244,59 @@ define([
     function pushDrawSprite(concCtx, xDest, yDest, wDest, hDest, xSrc, ySrc, wSrc, hSrc)
     {
       console.log("pushDrawSprite");
+
+      // normalize
+      xDest /= concCtx.width/2;
+      xDest -= 1;
+      wDest /= concCtx.width/2;
+
+      yDest /= -concCtx.height/2;
+      yDest += 1;
+      hDest /= -concCtx.height/2;
+
+      xSrc /= MAIN_SPRITESHEET_W;
+      wSrc /= MAIN_SPRITESHEET_W;
+
+      ySrc /= MAIN_SPRITESHEET_H;
+      ySrc = 1-ySrc;
+      hSrc /= -MAIN_SPRITESHEET_H;
+
+      // set up draw parameters
+      glCtx.useProgram(renderTextureProg);
+
+      glCtx.bindBuffer(glCtx.ARRAY_BUFFER, rectVtxBuf);
+      glCtx.bufferData(glCtx.ARRAY_BUFFER, new Float32Array([xDest, yDest, xDest+wDest, yDest, xDest+wDest,
+                                                            yDest+hDest, xDest, yDest+hDest]), glCtx.STREAM_DRAW);
+      glCtx.vertexAttribPointer(attrib_rtp_vec_in, 2, glCtx.FLOAT, glCtx.FALSE, 0, 0);
+
+      glCtx.bindBuffer(glCtx.ARRAY_BUFFER, sampleLocBuf);
+      glCtx.bufferData(glCtx.ARRAY_BUFFER, new Float32Array([xSrc, ySrc+hSrc, xSrc+wSrc, ySrc+hSrc,
+                                                            xSrc+wSrc, ySrc, xSrc, ySrc]), glCtx.STREAM_DRAW);
+      glCtx.vertexAttribPointer(attrib_rtp_texPosn, 2, glCtx.FLOAT, glCtx.FALSE, 0, 0);
+
+      glCtx.enableVertexAttribArray(attrib_rtp_vec_in);
+      glCtx.enableVertexAttribArray(attrib_rtp_texPosn);
+
+      glCtx.uniform1i(uniform_rtp_texSampler, 0);
+
+      // set up frame buffer
+      if(concCtx.giftbox.texture == null)
+      {
+        glCtx.bindFramebuffer(glCtx.FRAMEBUFFER, null);
+        glCtx.viewport(0, 0, SCREEN_CANVAS_WIDTH, SCREEN_CANVAS_HEIGHT);
+      }
+      else
+      {
+        glCtx.bindFramebuffer(glCtx.FRAMEBUFFER, theFrameBuffer);
+        glCtx.framebufferTexture2D(glCtx.FRAMEBUFFER, glCtx.COLOR_ATTACHMENT0, glCtx.TEXTURE_2D,
+                                   concCtx.giftbox.texture, 0);
+        glCtx.viewport(0, 0, concCtx.width, concCtx.height);
+      }
+
+      glCtx.drawArrays(glCtx.TRIANGLE_FAN, 0, 4);
+
+      glCtx.disableVertexAttribArray(attrib_rtp_vec_in);
+      glCtx.disableVertexAttribArray(attrib_rtp_texPosn);
     }
 
     function pushDrawTextLine(concCtx, x, y, str)
