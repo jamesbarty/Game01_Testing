@@ -95,17 +95,16 @@ define([
     }
   };
 
-  UiElement.prototype._draw = function(ctx) {
-    this.draw(ctx);
+  UiElement.prototype._draw = function(drawTarget) {
+    this.draw(drawTarget);
     for (var i = 0; i < this.children.length; i++) {
       var child = this.children[i];
-      child._draw(drawThroughContext(ctx, child.truePosition.left, child.truePosition.top, child.size.width, child.size.height));
+      child._draw(drawThroughContext(drawTarget, child.truePosition.left, child.truePosition.top, child.size.width, child.size.height));
     }
   };
 
-  UiElement.prototype.draw = function(ctx) {
-    ctx.fillStyle = 'rgba(0,0,0,0.2)';
-    ctx.fillRect(0, 0, this.size.width, this.size.height);
+  UiElement.prototype.draw = function(drawTarget) {
+    drawTarget.pushDrawFillRect(1, 1, 6, 6, 128, 200, 64, 255);
   };
 
   UiElement.prototype._update = function(deltaTime) {

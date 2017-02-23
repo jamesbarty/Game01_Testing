@@ -1,8 +1,10 @@
 define(function(){
   return {
-    LOGICAL_CANVAS_WIDTH:   320,
-    LOGICAL_CANVAS_HEIGHT:  180,
+    LOGICAL_CANVAS_WIDTH:   160,
+    LOGICAL_CANVAS_HEIGHT:  120,
     LOGICAL_PIXEL_EDGE:     4,
+
+    MAIN_SPRITE_SHEET_ID:   "MainSpriteSheet",
 
     FAWNT_7PT_MAP: {
       "a": {x: 0,w: 5},

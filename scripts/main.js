@@ -7,8 +7,21 @@ require([
   'lib/imageManager',
   'lib/spriteSheet',
   'lib/sprite',
-  'lib/label'
-], function(UiElement, MouseInteractive, MouseEvt, DrawThroughContext, KeyboardManager, ImageManager, SpriteSheet, Sprite, Label){
+  'lib/label',
+  'lib/coreGfxEng',
+  'lib/constants'
+], function(UiElement,
+            MouseInteractive,
+            MouseEvt,
+            DrawThroughContext,
+            KeyboardManager,
+            ImageManager,
+            SpriteSheet,
+            Sprite,
+            Label,
+            CoreGfxEng,
+            constants)
+{
   'use strict';
   var FPS = 60;
 
@@ -44,6 +57,7 @@ require([
       height: 100
     }
   });
+
   newThing.onMouseEnter = function(e) {
     console.log('parent enter');
     //console.log(e);
@@ -77,13 +91,8 @@ require([
 
   newThing.addChild(newThing2);
 
+  var canvas = document.getElementById('mainCanvas');
 
-  
-  
-
-
-  var canvas = document.getElementById('mainCanvas'),
-      ctx = canvas.getContext('2d');
   canvas.addEventListener('mousedown', onMouseDown);
   canvas.addEventListener('mouseup', onMouseUp);
   canvas.addEventListener('mousemove', onMouseMove);
@@ -211,7 +220,14 @@ require([
   //ImageManager.addImage('large.png', 'eleven');
   ImageManager.addImage('fawnt_7pt.png', 'fawnt');
   ImageManager.addImage('anim.png', 'spriteSheet');
+  ImageManager.addImage('res/index.jpg', constants.MAIN_SPRITE_SHEET_ID); // 512x512 for demo
 
   ImageManager.loadImages(gameFunc);
+
+  var coreGfxEng = CoreGfxEng(canvas, ImageManager);
+  var concCtx = coreGfxEng.createConcreteContext(constants.LOGICAL_CANVAS_WIDTH, constants.LOGICAL_CANVAS_HEIGHT);
+  var mainCtx = coreGfxEng.getRootConcreteContext();
+  concCtx.pushDrawSprite(0, 0, 128, 128, 128, 128, 256, 256);
+  mainCtx.pushDrawConcrete(0, 0, concCtx.width, concCtx.height, concCtx);
 
 });
