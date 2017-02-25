@@ -4,8 +4,6 @@ define(function(){
     LOGICAL_CANVAS_HEIGHT:  120,
     LOGICAL_PIXEL_EDGE:     4,
 
-    MAIN_SPRITE_SHEET_ID:   "MainSpriteSheet",
-
     FAWNT_7PT_MAP: {
       "a": {x: 0,w: 5},
       "b": {x: 5,w: 5},

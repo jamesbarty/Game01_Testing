@@ -18,17 +18,23 @@ define([
 
   DrawConcreteContext.prototype = Object.create(DrawTarget.prototype);
 
-  DrawConcreteContext.prototype.pushDrawFillRect = function(x, y, w, h, r, g, b, a)
+  DrawConcreteContext.prototype.pushDrawFillRect =
+    function(x, y, w, h, r, g, b, a)
   { this.giftbox.pushDrawFillRect(x, y, w, h, r, g, b, a); };
 
-  DrawConcreteContext.prototype.pushDrawSprite = function(xDest, yDest, wDest, hDest, xSrc, ySrc, wSrc, hSrc)
-  { this.giftbox.pushDrawSprite(xDest, yDest, wDest, hDest, xSrc, ySrc, wSrc, hSrc); };
+  DrawConcreteContext.prototype.pushDrawConcrete =
+    function(xDest, yDest, wDest, hDest, concSrc, xSrc, ySrc, wSrc, hSrc)
+  { this.giftbox.pushDrawConcrete(xDest, yDest, wDest, hDest, concSrc, xSrc, ySrc, wSrc, hSrc); };
 
-  DrawConcreteContext.prototype.pushDrawTextLine = function(x, y, str)
-  { this.giftbox.pushDrawTextLine(x, y, str) };
+  DrawConcreteContext.prototype.loadImage =
+    function(img)
+  { this.giftbox.loadImage(img); };
 
-  DrawConcreteContext.prototype.pushDrawConcrete = function(x, y, w, h, concreteCtx)
-  { this.giftbox.pushDrawConcrete(x, y, w, h, concreteCtx) };
+  DrawConcreteContext.prototype.pushDrawTextLine =
+    function(x, y, str)
+  { this.giftbox.pushDrawTextLine(x, y, str); };
+
+
 
   return DrawConcreteContext;
 });

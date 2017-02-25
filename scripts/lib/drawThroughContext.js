@@ -29,17 +29,19 @@ define([
 
   DrawThroughContext.prototype = Object.create(DrawTarget.prototype);
 
-  DrawThroughContext.prototype.pushDrawFillRect = function(x, y, w, h, r, g, b, a)
+  DrawThroughContext.prototype.pushDrawFillRect =
+    function(x, y, w, h, r, g, b, a)
   { parentTarget.pushDrawFillRect(x + this.xOff, y + this.yOff, w, h, r, g, b, a); };
 
-  DrawThroughContext.prototype.pushDrawSprite = function(xDest, yDest, wDest, hDest, xSrc, ySrc, wSrc, hSrc)
-  { parentTarget.pushDrawSprite(xDest + this.xOff, yDest + this.yOff, wDest, hDest, xSrc, ySrc, wSrc, hSrc); };
+  DrawThroughContext.prototype.pushDrawConcrete =
+    function(xDest, yDest, wDest, hDest, concSrc, xSrc, ySrc, wSrc, hSrc)
+  { parentTarget.pushDrawConcrete(xDest+this.xOff, yDest+this.yOff, wDest, hDest, concSrc, xSrc, ySrc, wSrc, hSrc); };
 
-  DrawThroughContext.prototype.pushDrawTextLine = function(x, y, str)
+  DrawThroughContext.prototype.pushDrawTextLine =
+    function(x, y, str)
   { parentTarget.pushDrawTextLine(x + this.xOff, y + this.yOff, str); };
 
-  DrawThroughContext.prototype.pushDrawConcrete = function(x, y, w, h, concreteCtx)
-  { parentTarget.pushDrawConcrete(x + this.xOff, y + this.yOff, w, h, concreteCtx); };
+
 
   return DrawThroughContext;
 });

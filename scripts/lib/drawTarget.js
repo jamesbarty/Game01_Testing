@@ -18,9 +18,8 @@ define(function(){
   }
 
   DrawTarget.prototype.pushDrawFillRect = function() { throw "Not implemented"; };
-  DrawTarget.prototype.pushDrawSprite = function() { throw "Not implemented"; };
-  DrawTarget.prototype.pushDrawTextLine = function() { throw "Not implemented"; };
   DrawTarget.prototype.pushDrawConcrete = function() { throw "Not implemented"; };
+  DrawTarget.prototype.pushDrawTextLine = function() { throw "Not implemented"; };
 
   return DrawTarget;
 });

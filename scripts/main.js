@@ -219,15 +219,19 @@ require([
   //ImageManager.addImage('large.jpg', 'ten');
   //ImageManager.addImage('large.png', 'eleven');
   ImageManager.addImage('fawnt_7pt.png', 'fawnt');
-  ImageManager.addImage('anim.png', 'spriteSheet');
-  ImageManager.addImage('res/index.jpg', constants.MAIN_SPRITE_SHEET_ID); // 512x512 for demo
 
   ImageManager.loadImages(gameFunc);
 
-  var coreGfxEng = CoreGfxEng(canvas, ImageManager);
+  var coreGfxEng = CoreGfxEng(canvas);
   var concCtx = coreGfxEng.createConcreteContext(constants.LOGICAL_CANVAS_WIDTH, constants.LOGICAL_CANVAS_HEIGHT);
   var mainCtx = coreGfxEng.getRootConcreteContext();
-  concCtx.pushDrawSprite(0, 0, 128, 128, 128, 128, 256, 256);
+  var tmpImg = document.createElement("img");
+  tmpImg.src = "res/index.jpg";
+  var spriteCtx = coreGfxEng.createConcreteContext(tmpImg.width, tmpImg.height);
+  spriteCtx.loadImage(tmpImg);
+  concCtx.pushDrawFillRect(0,0,30,30,255,0,0,255);
+  concCtx.pushDrawFillRect(50,50,40,40,0,255,0,255);
   mainCtx.pushDrawConcrete(0, 0, concCtx.width, concCtx.height, concCtx);
+  mainCtx.pushDrawConcrete(40, 40, 40, 40, spriteCtx, 0, 0, 500, 500);
 
 });
