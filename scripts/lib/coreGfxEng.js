@@ -179,7 +179,7 @@ define([
 
     function pushDrawFillRect(concCtx, x, y, w, h, r, g, b, a)
     {
-      console.log("pushDrawFillRect");
+      //console.log("pushDrawFillRect");
       // normalize
       x /= concCtx.width/2;
       x -= 1;
@@ -217,7 +217,7 @@ define([
 
     function pushDrawConcrete(concCtx, xDest, yDest, wDest, hDest, concSrc, xSrc, ySrc, wSrc, hSrc)
     {
-      console.log("pushDrawConcrete");
+      //console.log("pushDrawConcrete");
 
       if( (!(concSrc instanceof DrawConcreteContext)) || concSrc.giftbox.texture == null)
         throw "Invalid source concrete context (cannot draw from root context)";

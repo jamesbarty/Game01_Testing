@@ -20,6 +20,10 @@ define([
     this.horizontalAlignment = params.horizontalAlignment || 'left';  ///< Horizontal alignment: {left, center, right}
     this.position = params.position || {left: 0, top: 0};             ///< Offset from alignment-determined position
 
+    this.r = Util.randBetween(0,255);
+    this.g = Util.randBetween(0,255);
+    this.b = Util.randBetween(0,255);
+
     this.calculateTruePosition();
   }
 
@@ -99,12 +103,12 @@ define([
     this.draw(drawTarget);
     for (var i = 0; i < this.children.length; i++) {
       var child = this.children[i];
-      child._draw(drawThroughContext(drawTarget, child.truePosition.left, child.truePosition.top, child.size.width, child.size.height));
+      child._draw(new drawThroughContext(drawTarget, child.truePosition.left, child.truePosition.top, child.size.width, child.size.height));
     }
   };
 
   UiElement.prototype.draw = function(drawTarget) {
-    drawTarget.pushDrawFillRect(1, 1, 6, 6, 128, 200, 64, 255);
+    drawTarget.pushDrawFillRect(0, 0, this.size.width, this.size.height, this.r, this.g, this.b, 128);
   };
 
   UiElement.prototype._update = function(deltaTime) {

@@ -4,9 +4,9 @@ define([], function() {
   var Util = {
     pointInRect: function(px, py, x, y, w, h) {
       if (px < x ||
-          px > x + w ||
+          px >= x + w ||
           py < y ||
-          py > y + h) {
+          py >= y + h) {
         return false;
       }
       return true;

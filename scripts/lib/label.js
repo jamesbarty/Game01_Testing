@@ -11,7 +11,7 @@ define([
     this.count = 0;
     this.textLines = [];
     this.textLinePositions = [];
-    this.text = this.count + '';
+    this.text = params.text || '';
     this.textHAlign = params.textHAlign || 'left';
     this.textVAlign = params.textVAlign || 'top';
     this.wrapping = params.wrapping || 'none';
@@ -25,8 +25,8 @@ define([
 
   Label.prototype = Object.create(MouseInteractive.prototype);
 
-  Label.prototype.draw = function(ctx) {
-    ctx.fillRect(this.truePosition.left, this.truePosition.top, this.size.width, this.size.height);
+  Label.prototype.draw = function(drawTarget) {
+    //this.prototype.prototype.draw();
 
     for (var i = 0; i < this.textLines.length; i++) {
       var drawX = 0;
@@ -37,8 +37,8 @@ define([
         var glyphData = Constants.FAWNT_7PT_MAP[char.toLowerCase()];
         w = glyphData.w;
         x = glyphData.x;
-        ctx.drawImage(ImageManager.image['fawnt'], x, 0, w, 7, drawX + this.textLinePositions[i].x, this.textLinePositions[i].y, w, 7);
-        drawX += glyphData.w;
+        drawTarget.pushDrawConcrete(drawX + this.textLinePositions[i].x, this.textLinePositions[i].y, Math.floor(w / 2), Math.floor(7 / 2), ImageManager.jamal, x, 0, w, 7);
+        drawX += Math.floor(glyphData.w / 2);
       }
     }
 

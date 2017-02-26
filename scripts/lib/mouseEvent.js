@@ -1,4 +1,4 @@
-define([], function() {
+define(['lib/constants'], function (constants) {
   'use strict';
 
   function MouseEvt(e, offsetLeft, offsetTop) {
@@ -10,8 +10,11 @@ define([], function() {
     }
     else {
       var crect = document.getElementById('mainCanvas').getBoundingClientRect();
-      var x = e.offsetX ? e.offsetX : e.pageX - crect.left,
-          y = e.offsetY ? e.offsetY : e.pageY - crect.top;
+      var x = e.offsetX ? e.offsetX : e.pageX - crect.left;
+      var y = e.offsetY ? e.offsetY : e.pageY - crect.top;
+
+      x = Math.floor(x / constants.LOGICAL_PIXEL_EDGE);
+      y = Math.floor(y / constants.LOGICAL_PIXEL_EDGE);
       this.x = x;
       this.y = y;
       this.offsetX = x;
@@ -20,7 +23,7 @@ define([], function() {
     this.stopped = false;
   }
 
-  MouseEvt.prototype.stopPropagation = function() {
+  MouseEvt.prototype.stopPropagation = function () {
     this.stopped = true;
   }
 
