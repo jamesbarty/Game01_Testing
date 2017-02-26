@@ -37,8 +37,8 @@ define([
         var glyphData = Constants.FAWNT_7PT_MAP[char.toLowerCase()];
         w = glyphData.w;
         x = glyphData.x;
-        drawTarget.pushDrawConcrete(drawX + this.textLinePositions[i].x, this.textLinePositions[i].y, Math.floor(w / 2), Math.floor(7 / 2), ImageManager.jamal, x, 0, w, 7);
-        drawX += Math.floor(glyphData.w / 2);
+        drawTarget.pushDrawConcrete(drawX + this.textLinePositions[i].x, this.textLinePositions[i].y, w, 7, ImageManager.jamal, x, 0, w, 7);
+        drawX += glyphData.w;
       }
     }
 
