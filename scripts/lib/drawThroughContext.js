@@ -6,8 +6,9 @@
  */
 
 define([
-  'lib/drawTarget'
-], function(DrawTarget) {
+  'lib/drawTarget',
+  'lib/rgba'
+], function(DrawTarget, RGBA) {
   'use strict';
 
   function DrawThroughContext(parentTarget_n, xOff_n, yOff_n, width_n, height_n)
@@ -42,7 +43,13 @@ define([
     var clippedY = Math.max(y,0);
     var clippedW = Math.min(w, w - (w + x - this.width), w + x);
     var clippedH = Math.min(h, h - (h + y - this.height), h + y);
-    this.parentTarget.pushDrawFillRect(this.xOff + clippedX, this.yOff + clippedY, clippedW, clippedH, r, g, b, a);
+
+    if (r instanceof RGBA) {
+      this.parentTarget.pushDrawFillRect(this.xOff + clippedX, this.yOff + clippedY, clippedW, clippedH, r.r, r.g, r.b, r.a);
+    }
+    else {
+      this.parentTarget.pushDrawFillRect(this.xOff + clippedX, this.yOff + clippedY, clippedW, clippedH, r, g, b, a);
+    }
     //this.parentTarget.pushDrawFillRect(x + this.xOff, y + this.yOff, w, h, r, g, b, a);
   };
 

@@ -8,6 +8,7 @@ require([
   'lib/spriteSheet',
   'lib/sprite',
   'lib/label',
+  'lib/button',
   'lib/coreGfxEng',
   'lib/constants'
 ], function(UiElement,
@@ -19,6 +20,7 @@ require([
             SpriteSheet,
             Sprite,
             Label,
+            Button,
             CoreGfxEng,
             constants)
 {
@@ -53,7 +55,7 @@ require([
       top: 20
     },
     size: {
-      width: 20,
+      width: 40,
       height: 20
     }
   });
@@ -68,28 +70,28 @@ require([
 
   topLevel.addChild(newThing);
 
-  var newThing2 = new MouseInteractive({
-    name: 'child',
-    horizontalAlignment: 'right',
-    verticalAlignment: 'bottom',
-    position: {
-      left: -10,
-      top: -10
-    },
+  var btn = new Button({
+    name: 'button',
+    horizontalAlignment: 'center',
+    verticalAlignment: 'center',
     size: {
-      width: 20,
-      height: 20
-    }
+      width: 30,
+      height: 11
+    },
+    text: 'Click'
   });
-  newThing2.onMouseEnter = function(e) {
+  btn.onMouseEnter = function(e) {
     console.log('child enter');
     //console.log(e);
   }
-  newThing2.onMouseLeave = function(e) {
+  btn.onMouseLeave = function(e) {
     console.log('child leave');
   }
+  btn.onClick = function(e) {
+    newThing.setWidth(newThing.size.width + 5);
+  }
 
-  newThing.addChild(newThing2);
+  newThing.addChild(btn);
 
   var canvas = document.getElementById('mainCanvas');
 
@@ -107,6 +109,10 @@ require([
 
   function onMouseUp(e) {
     topLevel._onMouseUp(new MouseEvt(e));
+    if (topLevel.maybeClicked) {
+      topLevel._onClick(new MouseEvt(e));
+    }
+    MouseInteractive.clearMaybeClickedElts();
   }
 
   function onMouseMove(e) {
@@ -188,7 +194,7 @@ require([
       textHAlign: 'center',
       textVAlign: 'center'
     });
-    topLevel.addChild(labe);
+    //topLevel.addChild(labe);
     //console.log('loaded');
     //console.log(performance.now() - old);
     var lastTime = performance.now();

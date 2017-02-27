@@ -10,6 +10,7 @@ define([
 
     this.active = params.active || true; ///< Whether or not this element accepts events
     this.lastMoveTarget = null; ///< The last child element that consumed a mouse move event
+    this.maybeClicked = false;
   }
 
   MouseInteractive.prototype = Object.create(UiElement.prototype);
@@ -22,6 +23,13 @@ define([
     }
     console.log('MouseInteractive ' + this.id + ' handled click');
   };
+
+  //////////////////////////////////////////////////////////////////////////////////
+  MouseInteractive.prototype._onMouseEnter = function(e) {
+    if (Util.isFunction(this.onMouseEnter)) {
+      this.onMouseEnter(e);
+    }
+  }
 
   //////////////////////////////////////////////////////////////////////////////////
   MouseInteractive.prototype._onMouseLeave = function(e) {
@@ -60,12 +68,12 @@ define([
           // check for mouse enter
           if (child != this.lastMoveTarget) {
             // check for mouse leave
-            if (this.lastMoveTarget && this.lastMoveTarget.active && Util.isFunction(this.lastMoveTarget.onMouseLeave)) {
+            if (this.lastMoveTarget && this.lastMoveTarget.active && Util.isFunction(this.lastMoveTarget._onMouseLeave)) {
               var lastTargetEvent = new MouseEvt(e, this.lastMoveTarget.truePosition.left, this.lastMoveTarget.truePosition.top);
               this.lastMoveTarget._onMouseLeave(lastTargetEvent);
             }
-            if (Util.isFunction(child.onMouseEnter)) {
-              child.onMouseEnter(childEvent);
+            if (Util.isFunction(child._onMouseEnter)) {
+              child._onMouseEnter(childEvent);
             }
           }
         }
@@ -96,10 +104,13 @@ define([
 
   //////////////////////////////////////////////////////////////////////////////////
   MouseInteractive.prototype._onMouseDown = function(e) {
+    this.maybeClicked = true;
+    MouseInteractive.maybeClickedElts.push(this);
     // On the way down
     if (Util.isFunction(this.onMouseDownCapture)) {
       this.onMouseDownCapture(e);
     }
+
 
     // Did I kill it?
     if (e.stopped) {
@@ -170,9 +181,50 @@ define([
     }
   };
 
+  MouseInteractive.prototype._onClick = function(e) {
+    if (Util.isFunction(this.onClickCapture)) {
+      this.onClickCapture(e);
+    }
+
+    if (e.stopped) {
+      return;
+    }
+    
+    var childEvent;
+    for (var i = 0; i < this.children.length; i++) {
+      var child = this.children[i];
+      if (Util.pointInRect(e.offsetX, e.offsetY, child.truePosition.left, child.truePosition.top, child.size.width, child.size.height)) {
+        if (child.active && child.maybeClicked && child instanceof MouseInteractive) {
+          childEvent = new MouseEvt(e, child.truePosition.left, child.truePosition.top);
+          child._onClick(childEvent);
+        }
+        break;
+      }
+    }
+
+    // Did the event get killed before returning?? Skip it then
+    if (childEvent && childEvent.stopped) {
+      return;
+    }
+
+    // On the way up
+    if (Util.isFunction(this.onClick)) {
+      this.onClick(e);
+    }
+  };
+
   MouseInteractive.prototype.enable = function(bool) {
     console.log('MouseInteractive ' + this.id + ' enabled ' + bool);
     this.active = bool;
+  };
+
+  MouseInteractive.maybeClickedElts = [];
+
+  MouseInteractive.clearMaybeClickedElts = function() {
+    for (var i = 0; i < MouseInteractive.maybeClickedElts.length; i++) {
+      MouseInteractive.maybeClickedElts[i].maybeClicked = false;
+    }
+    MouseInteractive.maybeClickedElts = [];
   }
 
   return MouseInteractive;

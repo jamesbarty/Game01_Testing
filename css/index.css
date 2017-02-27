@@ -6,3 +6,7 @@
   top: 20px;
   left: calc(50% - 320px);
 }
+
+body {
+  background-color: #F00;
+}

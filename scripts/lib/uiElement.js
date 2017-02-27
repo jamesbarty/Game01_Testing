@@ -39,6 +39,17 @@ define([
     this.calculateTruePosition();
   };
 
+  UiElement.prototype.setWidth = function(width) {
+    this.size.width = width;
+    for (var i = 0; i < this.children.length; i++) {
+      this.children[i].parentDimensionsChanged();
+    }
+  };
+
+  UiElement.prototype.parentDimensionsChanged = function() {
+    this.calculateTruePosition();
+  };
+
   UiElement.prototype.calculateTruePosition = function() {
     if (this.parent === null) {
       // should only be the toplevel elt
@@ -108,7 +119,8 @@ define([
   };
 
   UiElement.prototype.draw = function(drawTarget) {
-    drawTarget.pushDrawFillRect(0, 0, this.size.width, this.size.height, this.r, this.g, this.b, 128);
+    drawTarget.pushDrawFillRect(0, 0, this.size.width/2, this.size.height, this.r, this.g, this.b, 128);
+    drawTarget.pushDrawFillRect(this.size.width/2, 0, this.size.width/2, this.size.height, this.r, this.g, this.b, 255);
   };
 
   UiElement.prototype._update = function(deltaTime) {
