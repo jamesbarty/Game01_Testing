@@ -165,6 +165,11 @@ define([
 
     // create frame buffer
     var theFrameBuffer = glCtx.createFramebuffer();
+    
+    // set blend mode
+    glCtx.enable(glCtx.BLEND);
+    glCtx.blendEquationSeparate(glCtx.FUNC_ADD, glCtx.FUNC_ADD);
+    glCtx.blendFuncSeparate(glCtx.SRC_ALPHA, glCtx.ONE_MINUS_SRC_ALPHA, glCtx.ONE, glCtx.ONE_MINUS_SRC_ALPHA);
 
     // create root concrete context
     var rootConcCtx = new DrawConcreteContext(null, constants.LOGICAL_CANVAS_WIDTH,
