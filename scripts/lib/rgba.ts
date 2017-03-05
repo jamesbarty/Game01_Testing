@@ -1,4 +1,10 @@
 export default class RGBA {
+
+	static blank = new RGBA(0, 0, 0, 0);
+	static red = new RGBA(255, 0, 0);
+	static green = new RGBA(0, 255, 0);
+	static blue = new RGBA(0, 0, 255);
+
 	r: number;
 	g: number;
 	b: number;
@@ -11,7 +17,3 @@ export default class RGBA {
 		this.a = a;
 	}
 }
-
-export let red = new RGBA(255, 0, 0);
-export let blue = new RGBA(0, 0, 255);
-export let green = new RGBA(0, 255, 0);
