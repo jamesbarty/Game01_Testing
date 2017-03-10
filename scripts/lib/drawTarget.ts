@@ -11,18 +11,18 @@ import DrawConcreteContext from "./drawConcreteContext";
 
 export default class DrawTarget
 {
-	private width: number;
-	private height: number;
+	readonly width: number;
+	readonly height: number;
 
-	constructor(width: number, height: number)
+	protected constructor(width_new: number, height_new: number)
 	{
-		if(width < 1 || height < 1)
+		if(width_new < 1 || height_new < 1)
 		{
 			throw "Invalid dimensions";
 		}
 
-		this.width = width;
-		this.height = height;
+		this.width = width_new;
+		this.height = height_new;
 	}
 
 	pushDrawFillRect(destRect: Rect, color: RGBA) : void
@@ -30,7 +30,11 @@ export default class DrawTarget
 		throw "Not implemented";
 	}
 
-	pushDrawConcrete(destRect: Rect, srcRect: Rect, srcCtx: DrawConcreteContext, alphaFac: number = 1.0, tint: RGBA = RGBA.blank) : void
+	pushDrawConcrete(destRect: Rect,
+					 srcCtx: DrawConcreteContext,
+					 alphaFac: number = 1.0,
+					 tint: RGBA = RGBA.blank,
+					 srcRect?: Rect) : void
 	{
 		throw "Not implemented";
 	}
