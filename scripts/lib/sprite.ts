@@ -35,6 +35,8 @@ export default class Sprite extends MouseInteractive {
 	}
 
 	update(deltaTime: number) {
+		super.update(deltaTime);
+		
 		if (!this.stopped) {
 			// update current frame duration with delta
 			// if over, switch to next frame (or not if end and no loop, or transition), reset frame duration

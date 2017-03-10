@@ -1,6 +1,28 @@
 //import DrawThroughContext from './drawThroughContext';
 import { isFunction, randBetween, vAlign, hAlign } from './util';
 
+enum AnimationType {
+	Opacity,
+	Position
+}
+
+interface IAnimation {
+	animType: AnimationType;
+	newValue: any;
+	oldValue: any;
+	duration: number;
+	callback: () => void;
+	easing: (t: number) => number;
+	isAbsolute: boolean;
+	lifetime: number;
+	complete: boolean;
+}
+
+interface ITopLeftPos {
+	left: number;
+	top: number;
+}
+
 export interface IUiElementParams {
 	name?: string;
 	size?: {
@@ -11,27 +33,18 @@ export interface IUiElementParams {
 	parent?: UiElement;
 	vAlign?: vAlign;
 	hAlign?: hAlign;
-	position?: {
-		left: number;
-		top: number;
-	}
+	position?: ITopLeftPos;
 }
 
 let uniqueId = 0;
 
 export default class UiElement {
-	protected position: {
-		left: number;
-		top: number;
-	}
+	protected _position: ITopLeftPos;
 	protected _size: {
 		width: number;
 		height: number;
 	};
-	private _truePosition: {
-		left: number;
-		top: number;
-	};
+	private _truePosition: ITopLeftPos;
 	protected children: UiElement[];
 	protected hAlign: hAlign;
 	protected id: number;
@@ -39,10 +52,15 @@ export default class UiElement {
 	protected parent: UiElement;
 	protected vAlign: vAlign;
 	protected visible: boolean;
+	private animations: IAnimation[];
+	private opacity: number;
 	r: number;
 	g: number;
 	b: number;
 
+	public get position() {
+		return Object.assign({}, this._position);
+	}
 	public get truePosition() {
 		return Object.assign({}, this._truePosition);
 	}
@@ -60,7 +78,8 @@ export default class UiElement {
 		this.parent = params.parent || null;
 		this.vAlign = params.vAlign || 'top';
 		this.hAlign = params.hAlign || 'left';
-		this.position = params.position || { left: 0, top: 0 };
+		this._position = params.position || { left: 0, top: 0 };
+		this.animations = [];
 
 		this.r = randBetween(0, 255);
 		this.g = randBetween(0, 255);
@@ -76,8 +95,8 @@ export default class UiElement {
 
 	setPosition(top: number, left: number) {
 		console.log('UiElement ' + this.id + ' position set');
-		this.position.top = top;
-		this.position.left = left;
+		this._position.top = top;
+		this._position.left = left;
 		this.calculateTruePosition();
 	}
 
@@ -104,13 +123,13 @@ export default class UiElement {
 
 		switch (this.vAlign) {
 			case "top":
-				this.truePosition.top = this.position.top;
+				this.truePosition.top = this._position.top;
 				break;
 			case "center":
-				this.truePosition.top = Math.floor((this.parent._size.height - this._size.height) / 2) + this.position.top;
+				this.truePosition.top = Math.floor((this.parent._size.height - this._size.height) / 2) + this._position.top;
 				break;
 			case "bottom":
-				this.truePosition.top = this.parent._size.height - this._size.height + this.position.top;
+				this.truePosition.top = this.parent._size.height - this._size.height + this._position.top;
 				break;
 			default:
 				console.error("Cannot calculate true position: invalid vertical alignment " + this.vAlign)
@@ -118,13 +137,13 @@ export default class UiElement {
 
 		switch (this.hAlign) {
 			case "left":
-				this.truePosition.left = this.position.left;
+				this.truePosition.left = this._position.left;
 				break;
 			case "center":
-				this.truePosition.left = Math.floor((this.parent._size.width - this._size.width) / 2) + this.position.left;
+				this.truePosition.left = Math.floor((this.parent._size.width - this._size.width) / 2) + this._position.left;
 				break;
 			case "right":
-				this.truePosition.left = this.parent._size.width - this._size.width + this.position.left;
+				this.truePosition.left = this.parent._size.width - this._size.width + this._position.left;
 				break;
 			default:
 				console.error("Cannot calculate true position: invalid horizontal alignment " + this.hAlign)
@@ -150,6 +169,30 @@ export default class UiElement {
 		else {
 			console.warn("Failed to remove child: child not found");
 		}
+	}
+
+	animate(animType: AnimationType, value: any, duration: number, callback: () => void = null, easing: (t: number) => number, isAbsolute: boolean = true): void {
+		let oldValue;
+		switch (animType) {
+			case AnimationType.Opacity:
+				oldValue = this.opacity;
+				break;
+			case AnimationType.Position:
+				oldValue = this.position;
+				break;
+		}
+
+		this.animations.push({
+			animType,
+			newValue: value,
+			oldValue: oldValue,
+			duration,
+			callback,
+			easing,
+			isAbsolute,
+			lifetime: 0,
+			complete: false
+		});
 	}
 
 	_draw(drawTarget: any) {
@@ -178,6 +221,39 @@ export default class UiElement {
 	}
 
 	update(deltaTime: number) {
+		for (let i = 0; i < this.animations.length; i++) {
+			// update time on each animation,
+			// set new value as appropriate
+			const anim = this.animations[i];
+			if (anim.complete === false) {
+				anim.lifetime += deltaTime;
+				const t = Math.min(anim.lifetime / anim.duration, 1);
+				const factor = anim.easing(t);
 
+				switch (anim.animType) {
+					case AnimationType.Opacity:
+						const oldOpacity = anim.oldValue as number;
+						const newOpaciy = anim.newValue as number;
+						const diffOpacity = anim.isAbsolute ? newOpaciy - oldOpacity : newOpaciy;
+						this.opacity = oldOpacity + diffOpacity * factor;
+						break;
+					case AnimationType.Position:
+						const oldPos = anim.oldValue as ITopLeftPos;
+						const newPos = anim.newValue as ITopLeftPos;
+						const diffTop = anim.isAbsolute ? newPos.top - oldPos.top : newPos.top;
+						const diffLeft = anim.isAbsolute ? newPos.left - oldPos.left : newPos.left;
+						const newTop = oldPos.top + diffTop * factor;
+						const newLeft = oldPos.left + diffLeft * factor;
+						this.setPosition(newTop, newLeft);
+						break;
+				}
+
+				// Animation has finished
+				if (t === 1) {
+					anim.callback();
+					anim.complete = true; // TODO: actually clean this up
+				}
+			}
+		}
 	}
 }
