@@ -173,8 +173,8 @@ export default class CoreGfxEng
 	private pushDrawConcrete(gft: ICoreGfxEngConcGift,
 							 destRect: Rect,
 							 srcCtx: DrawConcreteContext,
-							 alphaFac: number,
-							 tint: RGBA,
+							 alphaFac: number = 1.0,
+							 tint: RGBA = RGBA.blank,
 							 srcRect?: Rect) : void
 	{
 		const { glCtx } = this;
@@ -343,8 +343,8 @@ export default class CoreGfxEng
 
 		pushDrawConcrete(destRect: Rect,
 						 srcCtx: DrawConcreteContext,
-						 alphaFac: number,
-						 tint: RGBA,
+						 alphaFac: number = 1.0,
+						 tint: RGBA = RGBA.blank,
 						 srcRect?: Rect) : void
 		{
 			this.owningInstance.pushDrawConcrete(this, destRect, srcCtx, alphaFac, tint, srcRect);

@@ -67,64 +67,45 @@ var gameFunc = function () {
 		{
 			coreGfx.getRootConcreteContext().pushDrawConcrete(
 				new Rect(0,0,constants.LOGICAL_CANVAS_WIDTH*(tick+1)/(MAX_TICK+1),64),
-				conc,
-				1,
-				RGBA.blank,
-				new Rect(0,0,1024,1024));
+				conc);
 		}
 		else if(state == 1)
 		{
 			coreGfx.getRootConcreteContext().pushDrawConcrete(
 				new Rect(0,0,64,constants.LOGICAL_CANVAS_HEIGHT*(tick+1)/(MAX_TICK+1)),
-				conc,
-				1,
-				RGBA.blank,
-				new Rect(0,0,1024,1024));
+				conc);
 		}
 		else if(state == 2)
 		{
 			coreGfx.getRootConcreteContext().pushDrawConcrete(
 				new Rect(0,0,128,128),
 				conc,
-				tick / MAX_TICK,
-				RGBA.blank,
-				new Rect(0,0,1024,1024));
+				tick / MAX_TICK);
 		}
 		else if(state == 3)
 		{
 			coreGfx.getRootConcreteContext().pushDrawConcrete(
 				new Rect(0,0,128,128),
 				conc,
-				1-tick / MAX_TICK,
-				RGBA.blank,
-				new Rect(0,0,1024,1024));
+				1-tick / MAX_TICK);
 		}
 		else if(state == 4)
 		{
 			coreGfx.getRootConcreteContext().pushDrawConcrete(
 				new Rect(constants.LOGICAL_CANVAS_WIDTH * (tick/MAX_TICK) - 32,10,64,64),
-				conc,
-				1,
-				RGBA.blank,
-				new Rect(0,0,1024,1024));
+				conc);
 		}
 		else if(state == 5)
 		{
 			coreGfx.getRootConcreteContext().pushDrawConcrete(
 				new Rect(10,constants.LOGICAL_CANVAS_HEIGHT * (tick/MAX_TICK) - 32,64,64),
-				conc,
-				1,
-				RGBA.blank,
-				new Rect(0,0,1024,1024));
+				conc);
 		}
 		else if(state == 6)
 		{
 			coreGfx.getRootConcreteContext().pushDrawConcrete(
 				new Rect(constants.LOGICAL_CANVAS_WIDTH * (tick/MAX_TICK) - 32,constants.LOGICAL_CANVAS_HEIGHT * (tick/MAX_TICK) - 32,64,64),
-				conc,
-				1,
-				RGBA.blank,
-				new Rect(0,0,1024,1024));
+				conc);
 		}
 		else if(state == 7)
 		{
@@ -132,8 +113,7 @@ var gameFunc = function () {
 				new Rect(10,10,64,64),
 				conc,
 				1,
-				new RGBA(0,0,255, 255*tick/MAX_TICK),
-				new Rect(0,0,1024,1024));
+				new RGBA(0,0,255, 255*tick/MAX_TICK));
 		}
 		else
 		{
