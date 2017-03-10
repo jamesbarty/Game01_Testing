@@ -10,10 +10,8 @@ module.exports = {
     extensions: ['.js', '.ts']
   },
   module: {
-    rules: [
-      
-      { test: /\.tsx?$/, exclude: /node_modules/, use: "ts-loader" },
-      { test: /\.js$/, exclude: /node_modules/, use: "babel-loader" },
-    ]
+    loaders: [{
+      test: /\.ts$/, loaders: ['babel-loader', 'ts-loader'], exclude: /node_modules/
+    }]
   }
 };

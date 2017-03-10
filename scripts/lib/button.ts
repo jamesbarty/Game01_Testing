@@ -3,7 +3,7 @@ import MouseEvt from './mouseEvent';
 import Label from './label';
 import DrawTarget from './drawTarget';
 import DrawThroughContext from './drawThroughContext';
-import RGBA, { red } from './rgba';
+import RGBA from './rgba';
 
 export interface IButtonParams extends IMouseInteractiveParams {
 	text: string;
@@ -39,7 +39,7 @@ export default class Button extends MouseInteractive {
 			wrapping: 'none'
 		});
 		this.state = ButtonStates.none; // none, hover, active
-		this.styles = params.styles || [new RGBA(255, 255, 255), new RGBA(128, 128, 128), red];
+		this.styles = params.styles || [new RGBA(255, 255, 255), new RGBA(128, 128, 128), RGBA.red];
 	}
 
 	_onMouseDown(e: MouseEvt) {
