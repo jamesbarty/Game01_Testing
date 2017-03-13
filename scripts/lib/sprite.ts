@@ -1,7 +1,9 @@
 import MouseInteractive, { IMouseInteractiveParams } from './mouseInteractive';
 import { imageManager } from './imageManager';
-import SpriteSheet from './spriteSheet';
+import SpriteSheet, { IFrame } from './spriteSheet';
 import DrawTarget from './drawTarget';
+import { Rect } from './geometry';
+import RGBA from './rgba';
 
 export interface ISpriteParams extends IMouseInteractiveParams {
 	spriteSheet: SpriteSheet;
@@ -13,7 +15,7 @@ export default class Sprite extends MouseInteractive {
 	currentAnimation: string;
 	currentFrameDuration: number;
 	currentFrameNum: number;
-	currentFrame: any // TODO;
+	currentFrame: Rect;
 
 	constructor(params: ISpriteParams) {
 		super(params);
@@ -41,7 +43,7 @@ export default class Sprite extends MouseInteractive {
 			// update current frame duration with delta
 			// if over, switch to next frame (or not if end and no loop, or transition), reset frame duration
 			this.currentFrameDuration += deltaTime;
-			var anim = this.spriteSheet.animations[this.currentAnimation];
+			var anim = this.spriteSheet.getAnimation(this.currentAnimation);
 			var frameDur = anim.frameDuration;
 			// go to next frame
 			if (this.currentFrameDuration >= frameDur) {
@@ -56,15 +58,15 @@ export default class Sprite extends MouseInteractive {
 					this.stop();
 					return;
 				}
-				this.currentFrame = this.spriteSheet.frames[this.spriteSheet.animations[this.currentAnimation].frames[this.currentFrameNum]];
+				this.currentFrame = this.spriteSheet.getFrame(this.spriteSheet.getAnimation(this.currentAnimation).frames[this.currentFrameNum]);
 			}
 		}
 	}
 
 	draw(drawTarget: DrawTarget) {
 		if (this.currentFrame != null) {
-			drawTarget.drawImage(this.spriteSheet.source, this.currentFrame[0], this.currentFrame[1], this.currentFrame[2], this.currentFrame[3],
-				this.truePosition.left, this.truePosition.top, this.currentFrame[2], this.currentFrame[3]);
+			const destRect = new Rect(this.truePosition.left, this.truePosition.top, this.currentFrame.w, this.currentFrame.h);
+			drawTarget.pushDrawConcrete(destRect, this.spriteSheet.concrete, 1, RGBA.blank, this.currentFrame);
 		}
 	}
 
@@ -72,7 +74,7 @@ export default class Sprite extends MouseInteractive {
 		this.currentAnimation = animation;
 		this.currentFrameDuration = 0;
 		this.currentFrameNum = 0;
-		this.currentFrame = this.spriteSheet.frames[this.spriteSheet.animations[this.currentAnimation].frames[this.currentFrameNum]];
+		this.currentFrame = this.spriteSheet.getFrame(this.spriteSheet.getAnimation(this.currentAnimation).frames[this.currentFrameNum]);
 		this.play();
 	}
 
@@ -80,7 +82,7 @@ export default class Sprite extends MouseInteractive {
 		this.currentAnimation = animation;
 		this.currentFrameDuration = 0;
 		this.currentFrameNum = 0;
-		this.currentFrame = this.spriteSheet.frames[this.spriteSheet.animations[this.currentAnimation].frames[this.currentFrameNum]];
+		this.currentFrame = this.spriteSheet.getFrame(this.spriteSheet.getAnimation(this.currentAnimation).frames[this.currentFrameNum]);
 		this.stop();
 	}
 }

@@ -1,10 +1,6 @@
 #mainCanvas {
-  width: 640px;
-  height: 480px;
   border:1px solid #000;
   position:absolute;
-  top: 20px;
-  left: calc(50% - 320px);
 }
 
 body {

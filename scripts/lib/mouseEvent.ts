@@ -15,7 +15,9 @@ export default class MouseEvt {
 			this.offsetY = e.offsetY - offsetTop;
 		}
 		else if (e instanceof MouseEvent) {
-			const crect = document.getElementById('mainCanvas').getBoundingClientRect();
+			// Janky but does what we want
+			const elt = e.target as HTMLElement;
+			const crect = elt.getBoundingClientRect();
 			let x = e.offsetX ? e.offsetX : e.pageX - crect.left;
 			let y = e.offsetY ? e.offsetY : e.pageY - crect.top;
 			x = Math.floor(x / LOGICAL_PIXEL_EDGE);

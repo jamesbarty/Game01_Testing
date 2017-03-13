@@ -8,8 +8,8 @@
 import RGBA from "./rgba";
 import { Rect } from "./geometry";
 import * as constants from "./constants";
-import DrawConcreteContext from "./drawConcreteContext.ts";
-import { IConcreteGiftbox } from "./drawConcreteContext.ts";
+import DrawConcreteContext from "./drawConcreteContext";
+import { IConcreteGiftbox } from "./drawConcreteContext";
 
 interface ICoreGfxEngConcGift extends IConcreteGiftbox
 {

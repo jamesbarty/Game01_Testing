@@ -47,12 +47,12 @@ export default class DrawThroughContext extends DrawTarget
 
 		if(x + w > this.width)
 		{
-			w = x - this.width;
+			w = this.width - x;
 		}
 
 		if(y + h > this.height)
 		{
-			h = y - this.height;
+			h = this.height - y;
 		}
 
 		if(x < 0)
@@ -69,8 +69,8 @@ export default class DrawThroughContext extends DrawTarget
 
 		// Perhaps final check for rectangle existence is necessary
 
-		this.rectCacheDest.x = x;
-		this.rectCacheDest.y = y;
+		this.rectCacheDest.x = x + this.xOff;
+		this.rectCacheDest.y = y + this.yOff;
 		this.rectCacheDest.w = w;
 		this.rectCacheDest.h = h;
 
@@ -78,7 +78,7 @@ export default class DrawThroughContext extends DrawTarget
 		{
 			this.rectCacheSrc.x = src.x + (x - dest.x) * (src.w / dest.w);
 			this.rectCacheSrc.y = src.y + (y - dest.y) * (src.h / dest.h);
-			this.rectCacheSrc.w = src.w * (w / dest.h);
+			this.rectCacheSrc.w = src.w * (w / dest.w);
 			this.rectCacheSrc.h = src.h * (h / dest.h);
 		}
 

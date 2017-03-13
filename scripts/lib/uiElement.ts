@@ -1,5 +1,9 @@
 //import DrawThroughContext from './drawThroughContext';
 import { isFunction, randBetween, vAlign, hAlign } from './util';
+import DrawTarget from './drawTarget';
+import DrawThroughContext from './drawThroughContext';
+import RGBA from './rgba';
+import { Rect } from './geometry';
 
 enum AnimationType {
 	Opacity,
@@ -123,13 +127,13 @@ export default class UiElement {
 
 		switch (this.vAlign) {
 			case "top":
-				this.truePosition.top = this._position.top;
+				this._truePosition.top = this._position.top;
 				break;
 			case "center":
-				this.truePosition.top = Math.floor((this.parent._size.height - this._size.height) / 2) + this._position.top;
+				this._truePosition.top = Math.floor((this.parent._size.height - this._size.height) / 2) + this._position.top;
 				break;
 			case "bottom":
-				this.truePosition.top = this.parent._size.height - this._size.height + this._position.top;
+				this._truePosition.top = this.parent._size.height - this._size.height + this._position.top;
 				break;
 			default:
 				console.error("Cannot calculate true position: invalid vertical alignment " + this.vAlign)
@@ -137,13 +141,13 @@ export default class UiElement {
 
 		switch (this.hAlign) {
 			case "left":
-				this.truePosition.left = this._position.left;
+				this._truePosition.left = this._position.left;
 				break;
 			case "center":
-				this.truePosition.left = Math.floor((this.parent._size.width - this._size.width) / 2) + this._position.left;
+				this._truePosition.left = Math.floor((this.parent._size.width - this._size.width) / 2) + this._position.left;
 				break;
 			case "right":
-				this.truePosition.left = this.parent._size.width - this._size.width + this._position.left;
+				this._truePosition.left = this.parent._size.width - this._size.width + this._position.left;
 				break;
 			default:
 				console.error("Cannot calculate true position: invalid horizontal alignment " + this.hAlign)
@@ -164,6 +168,7 @@ export default class UiElement {
 	removeChild(child: UiElement) {
 		var i = this.children.indexOf(child);
 		if (i !== -1) {
+			child.parent = null;
 			this.children.splice(i, 1);
 		}
 		else {
@@ -195,19 +200,16 @@ export default class UiElement {
 		});
 	}
 
-	_draw(drawTarget: any) {
+	_draw(drawTarget: DrawTarget) {
 		this.draw(drawTarget);
-		for (var i = 0; i < this.children.length; i++) {
-			var child = this.children[i];
-			//child._draw(new drawThroughContext(drawTarget, child.truePosition.left, child.truePosition.top, child.size.width, child.size.height));
+		for (let i = 0; i < this.children.length; i++) {
+			let child = this.children[i];
+			child._draw(new DrawThroughContext(drawTarget, child.truePosition.left, child.truePosition.top, child.size.width, child.size.height));
 		}
 	}
 
-	draw(drawTarget: any) {
-		drawTarget.fillStyle = '#000';
-		drawTarget.fillRect(0, 0, 20, 20);
-		//drawTarget.pushDrawFillRect(0, 0, this.size.width / 2, this.size.height, this.r, this.g, this.b, 128);
-		//drawTarget.pushDrawFillRect(this.size.width / 2, 0, this.size.width / 2, this.size.height, this.r, this.g, this.b, 255);
+	draw(drawTarget: DrawTarget) {
+		drawTarget.pushDrawFillRect(new Rect(0, 0, this.size.width, this.size.height), new RGBA(0, 0, 0, 64));
 	}
 
 	_update(deltaTime: number) {

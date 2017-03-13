@@ -4,10 +4,13 @@ import Label from './label';
 import DrawTarget from './drawTarget';
 import DrawThroughContext from './drawThroughContext';
 import RGBA from './rgba';
+import { Rect } from './geometry';
+import SpriteSheet from './spriteSheet';
 
 export interface IButtonParams extends IMouseInteractiveParams {
 	text: string;
-	styles: any[]; // TODO
+	styles: RGBA[];
+	spriteSheet: SpriteSheet;
 }
 
 const enum ButtonStates {
@@ -16,15 +19,18 @@ const enum ButtonStates {
 	"active" = 2
 }
 
-// type buttonState = "none" | "hover" | "active";
-
 export default class Button extends MouseInteractive {
 	label: Label;
 	state: ButtonStates;
-	styles: any[]; // TODO
+	styles: RGBA[];
+	spriteSheet: SpriteSheet;
 
 	constructor(params: IButtonParams) {
 		super(params);
+
+		this.spriteSheet = params.spriteSheet;
+		this.state = ButtonStates.none; // none, hover, active
+		this.styles = params.styles || [new RGBA(255, 255, 255), new RGBA(128, 128, 128), RGBA.red];
 
 		this.label = new Label({
 			text: params.text || '',
@@ -36,10 +42,9 @@ export default class Button extends MouseInteractive {
 			vAlign: 'center',
 			textHAlign: 'center',
 			textVAlign: 'center',
-			wrapping: 'none'
+			wrapping: 'none',
+			spriteSheet: this.spriteSheet
 		});
-		this.state = ButtonStates.none; // none, hover, active
-		this.styles = params.styles || [new RGBA(255, 255, 255), new RGBA(128, 128, 128), RGBA.red];
 	}
 
 	_onMouseDown(e: MouseEvt) {
@@ -68,19 +73,8 @@ export default class Button extends MouseInteractive {
 	}
 
 	draw(drawTarget: DrawTarget) {
-		switch (this.state) {
-			case ButtonStates.none:
-				drawTarget.pushDrawFillRect(0, 0, this.size.width, this.size.height, this.styles[this.state]);
-				break;
-			case ButtonStates.hover:
-				drawTarget.pushDrawFillRect(0, 0, this.size.width, this.size.height, this.styles[this.state]);
-				break;
-			case ButtonStates.active:
-				drawTarget.pushDrawFillRect(0, 0, this.size.width, this.size.height, this.styles[this.state]);
-				break;
-			default:
-				console.error('Unsupported button state: ' + this.state);
-		}
+		const r = new Rect(0, 0, this.size.width, this.size.height);
+		drawTarget.pushDrawFillRect(r, this.styles[this.state]);
 		const l = this.label;
 		l.draw(new DrawThroughContext(drawTarget, l.truePosition.left, l.truePosition.top, l.size.width, l.size.height));
 	}

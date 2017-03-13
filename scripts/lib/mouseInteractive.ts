@@ -95,7 +95,7 @@ export default class MouseInteractive extends UiElement {
 		}
 		// I'm not on any of my children, which means if I was last time, it needs a mouseleave
 		if (!found) {
-			if (this.lastMoveTarget && this.lastMoveTarget.active && isFunction(this.lastMoveTarget.onMouseLeave)) {
+			if (this.lastMoveTarget && this.lastMoveTarget.active && isFunction(this.lastMoveTarget._onMouseLeave)) {
 				var lastTargetEvent = new MouseEvt(e, this.lastMoveTarget.truePosition.left, this.lastMoveTarget.truePosition.top);
 				this.lastMoveTarget._onMouseLeave(lastTargetEvent);
 			}

@@ -3,6 +3,9 @@ import * as Constants from './constants';
 import { imageManager } from './imageManager';
 import * as Util from './util';
 import DrawTarget from './drawTarget';
+import RGBA from './rgba';
+import { Rect } from './geometry';
+import SpriteSheet from './spriteSheet';
 
 interface ITextLine {
 	text: string;
@@ -20,6 +23,8 @@ interface ILabelParams extends IMouseInteractiveParams {
 	wrapping?: Util.wrapping;
 	lineHeight?: number;
 	text?: string;
+	// Spritesheet for font glyphs
+	spriteSheet: SpriteSheet;
 }
 
 export default class Label extends MouseInteractive {
@@ -34,6 +39,7 @@ export default class Label extends MouseInteractive {
 	frame: number;
 	fontData: Constants.IFontMap;
 	fontHeight: number;
+	spriteSheet: SpriteSheet;
 
 	constructor(params: ILabelParams) {
 		super(params);
@@ -49,26 +55,34 @@ export default class Label extends MouseInteractive {
 		this.frame = 0;
 		this.fontData = Constants.FAWNT_7PT_MAP;
 		this.fontHeight = 7;
+		this.spriteSheet = params.spriteSheet;
 		this.updateText();
 	}
 
 	draw(drawTarget: DrawTarget) {
-		for (var i = 0; i < this.textLines.length; i++) {
-			var drawX = 0;
-			var w = 0;
-			var x = 0;
-			for (var j = 0; j < this.textLines[i].text.length; j++) {
-				var char = this.textLines[i].text[j];
-				var glyphData = Constants.FAWNT_7PT_MAP[char.toLowerCase()];
-				w = glyphData.w;
-				x = glyphData.x;
-				drawTarget.pushDrawConcrete(drawX + this.textLinePositions[i].x, this.textLinePositions[i].y, w, 7, imageManager.imageMap["jamal"], x, 0, w, 7);
-				drawX += glyphData.w;
+		super.draw(drawTarget);
+		for (let i = 0; i < this.textLines.length; i++) {
+			let drawX = 0;
+			let line = this.textLines[i];
+			let linePosition = this.textLinePositions[i];
+			let destRect = new Rect();
+			let srcRect = new Rect();
+			for (let j = 0; j < line.text.length; j++) {
+				const char = line.text[j];
+				const frame = this.spriteSheet.getFrame(char);
+				destRect.x = drawX + linePosition.x;
+				destRect.y = linePosition.y;
+				destRect.w = frame.w;
+				destRect.h = frame.h;
+				drawTarget.pushDrawConcrete(destRect, this.spriteSheet.concrete, 1, RGBA.blank, frame);
+				drawX += frame.w;
 			}
 		}
 	}
 
-	update(deltaTime: number) {
+	_update(deltaTime: number) {
+		super._update(deltaTime);
+		return;
 		this.frame += 1;
 		if (this.frame >= 60) {
 			this.frame = 0;
@@ -106,7 +120,7 @@ export default class Label extends MouseInteractive {
 					var wordlen = this.measureText((index === 0 ? '' : ' ') + words[i]);
 					// oh no can't fit it
 					if (runLength + wordlen > this.size.width) {
-						// first word on a line needs to be wrapped at characters if can't fit
+						// TODO: first word on a line needs to be wrapped at characters if can't fit
 						if (index === 0) {
 
 						}
