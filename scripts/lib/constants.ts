@@ -3,7 +3,7 @@ import { Rect } from './geometry';
 
 export const LOGICAL_CANVAS_WIDTH: number = 264;
 export const LOGICAL_CANVAS_HEIGHT: number = 196;
-export const LOGICAL_PIXEL_EDGE: number = 3;
+export const LOGICAL_PIXEL_EDGE: number = 4;
 export const SCREEN_CANVAS_WIDTH: number = LOGICAL_CANVAS_WIDTH * LOGICAL_PIXEL_EDGE;
 export const SCREEN_CANVAS_HEIGHT: number = LOGICAL_CANVAS_HEIGHT * LOGICAL_PIXEL_EDGE;
 export const SPRITESHEET_MAIN = "mainSpriteSheet";

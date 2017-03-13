@@ -60,7 +60,7 @@ export default class Label extends MouseInteractive {
 	}
 
 	draw(drawTarget: DrawTarget) {
-		super.draw(drawTarget);
+		//super.draw(drawTarget);
 		for (let i = 0; i < this.textLines.length; i++) {
 			let drawX = 0;
 			let line = this.textLines[i];

@@ -49,9 +49,11 @@ export default class GameEngine {
 
 		this.spriteSheets = {};
 		this.spriteSheets[constants.SPRITESHEET_MAIN] = new SpriteSheet({
-			source: imageManager.imageMap['font'],
+			source: imageManager.imageMap['spritesheet'],
 			engine: this.gfxEng
 		});
+		let framez = constants.FAWNT_7PT_MAP;
+		framez["back"] = new Rect(0, 7, 294, 196);
 		this.spriteSheets[constants.SPRITESHEET_MAIN].loadFrames({
 			frames: constants.FAWNT_7PT_MAP,
 			animations: {

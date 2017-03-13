@@ -200,7 +200,7 @@ export default class MouseInteractive extends UiElement {
 		}
 
 		var childEvent;
-		for (var i = 0; i < this.children.length; i++) {
+		for (var i = this.children.length - 1; i >= 0; i--) {
 			var child = this.children[i] as MouseInteractive;
 			if (pointInRect(e.offsetX, e.offsetY, child.truePosition.left, child.truePosition.top, child.size.width, child.size.height)) {
 				if (child.active && child.maybeClicked && child instanceof MouseInteractive) {

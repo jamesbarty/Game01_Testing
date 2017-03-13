@@ -3,6 +3,7 @@ import GameEngine from '../gameEngine';
 import MouseInteractive from '../../lib/mouseInteractive';
 import Button from '../../lib/button';
 import Label from '../../lib/label';
+import Bitmap from '../../lib/bitmap';
 import RGBA from '../../lib/rgba';
 import * as Constants from '../../lib/constants';
 import { TransitionType } from '../screenManager';
@@ -12,98 +13,89 @@ export default class MainMenu extends Screen {
 	constructor(game: GameEngine) {
 		super("MainMenuScreen", game);
 
-		//lame
-		let parentElt = new MouseInteractive({
-			name: 'parent',
+		this.buildUi();
+	}
+
+	buildUi() {
+		const ss =  this.game.spriteSheets[Constants.SPRITESHEET_MAIN];
+		let background = new Bitmap({
+			spriteSheet: ss,
+			frameKey: "back",
+			size: {
+				width: ss.getFrame("back").w,
+				height: ss.getFrame("back").h
+			}
+		});
+
+		let menuBoard = new MouseInteractive({
+			name: 'menuBoard',
 			position: {
-				left: 20,
-				top: 20
+				left: 0,
+				top: -40
+			},
+			size: {
+				width: 60,
+				height: 45
+			},
+			hAlign: 'center',
+			vAlign: 'bottom'
+		});
+		
+		let btnNewGame = new Button({
+			text: 'New Game',
+			position: {
+				left: 0,
+				top: 5
 			},
 			size: {
 				width: 50,
-				height: 50
-			}
+				height: 15
+			},
+			hAlign: 'center',
+			styles: [RGBA.white, RGBA.lightGrey, RGBA.mediumGrey],
+			spriteSheet: this.game.spriteSheets[Constants.SPRITESHEET_MAIN]
 		});
-		parentElt.onMouseEnter = () => {
-			console.log('parent enter');
-		}
-		parentElt.onMouseLeave = () => {
-			console.log('parent leave');
-		}
-		parentElt.onMouseDown = () => {
-			console.log('parent down');
-		}
-		parentElt.onMouseUp = () => {
-			console.log('parent up');
+		btnNewGame.onClick = () => {
+			this.game.screenManager.setScreen(this.game.screens['worldMap'], TransitionType.Cut);
 		}
 
-		/*let childElt = new Label({
-			text: 'Fonts dont work all the time',
-			name: 'child',
+		let btnLoadGame = new Button({
+			text: 'Load Game',
 			position: {
 				left: 0,
-				top: 0
+				top: 25
 			},
 			size: {
-				width: 35,
-				height: 30
+				width: 50,
+				height: 15
 			},
-			spriteSheet: this.spriteSheets[constants.SPRITESHEET_MAIN],
-			wrapping: 'character'
-		});*/
+			hAlign: 'center',
+			styles: [RGBA.white, RGBA.lightGrey, RGBA.mediumGrey],
+			spriteSheet: ss
+		});
 
-		let titleElt = new Label({
-			text: 'Main Menu Screen',
+		let title = new Label({
+			text: 'Main Menu',
 			name: 'title',
 			position: {
-				left: -10,
-				top:- 20
+				left: 10,
+				top: 10
 			},
 			size: {
 				width: 100,
 				height: 30
 			},
-			spriteSheet: this.game.spriteSheets[Constants.SPRITESHEET_MAIN],
+			spriteSheet: ss,
 			wrapping: 'character',
-			hAlign: 'right',
-			vAlign: 'bottom',
 			textHAlign: 'center',
 			textVAlign: 'center'
 		});
+		
+		menuBoard.addChild(btnNewGame);
+		menuBoard.addChild(btnLoadGame);
 
-		let childElt = new Button({
-			text: 'click me',
-			styles: [RGBA.red, RGBA.green, RGBA.blue],
-			spriteSheet: this.game.spriteSheets[Constants.SPRITESHEET_MAIN],
-			size: {
-				width: 35,
-				height: 15
-			},
-			hAlign: 'center'
-		});
-		childElt.onMouseEnter = () => {
-			console.log('child enter');
-		}
-		childElt.onMouseLeave = () => {
-			console.log('child leave');
-		}
-		childElt.onMouseDown = () => {
-			console.log('child down');
-		}
-		childElt.onMouseUp = () => {
-			console.log('child up');
-		}
-		childElt.onClick = () => {
-			//parentElt.setWidth(parentElt.size.width + 10);
-			this.game.screenManager.setScreen(this.game.screens['worldMap'], TransitionType.Cut);
-		}
-
-		childElt.update = function() {
-			//this.position.x = this.position.x + 1 % this.size.width;
-		}
-		parentElt.addChild(childElt);
-
-		this.rootElement.addChild(parentElt);
-		this.rootElement.addChild(titleElt);
+		this.rootElement.addChild(background);
+		this.rootElement.addChild(title);
+		this.rootElement.addChild(menuBoard);
 	}
 }
