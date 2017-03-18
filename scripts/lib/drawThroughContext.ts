@@ -114,7 +114,15 @@ export default class DrawThroughContext extends DrawTarget
 					 tint: RGBA = RGBA.blank,
 					 srcRect?: Rect) : void
 	{
-		if(this.clipToCache(destRect, srcRect))
+		if(!srcRect)
+		{
+			this.rectCacheSrc.x = 0;
+			this.rectCacheSrc.y = 0;
+			this.rectCacheSrc.w = srcCtx.width;
+			this.rectCacheSrc.h = srcCtx.height;
+		}
+
+		if(this.clipToCache(destRect, srcRect ? srcRect : this.rectCacheSrc))
 		{
 			this.parentTarget.pushDrawConcrete(this.rectCacheDest,
 											   srcCtx,
