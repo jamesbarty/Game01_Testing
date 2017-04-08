@@ -24,4 +24,9 @@ export default class RGBA {
 		this.b = b;
 		this.a = a;
 	}
+
+	toString(): string
+	{
+		return "{RGBA: r=" + this.r + " g=" + this.g + " b=" + this.b + " a=" + this.a + "}";
+	}
 }

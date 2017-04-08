@@ -20,4 +20,9 @@ export class Rect
 		this.w = w_new;
 		this.h = h_new;
 	}
+
+	toString(): string
+	{
+		return "{Rect: x=" + this.x + " y=" + this.y + " w=" + this.w + " h=" + this.h + "}";
+	}
 }
