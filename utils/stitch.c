@@ -560,6 +560,7 @@ int spriteComp(const void * l_v, const void * r_v)
 /**
  * Arrange all of the sprites
  * @returns The number of sheets required
+ * @returns 0 on error
  */
 uint32_t arrange(Sprite * const * const allSprites, size_t totalSprites)
 {
@@ -585,6 +586,11 @@ uint32_t arrange(Sprite * const * const allSprites, size_t totalSprites)
 			nextY = curY + curSprite->h;
 			if (nextY > DEST_SHEET_SIZE)
 			{
+				if(curY == 0)
+				{
+					TRACE("Sprite %s is too tall\n", curSprite->name);
+					return 0;
+				}
 				curX = 0;
 				curY = 0;
 				nextY = curSprite->h;
@@ -668,22 +674,29 @@ int main(int argc, char* argv[])
 			}
 #endif
 			free(allSprites);
-			/* rows, then columns, then sheets */
-			Pixel* bitmapData = malloc(sizeof(Pixel) * DEST_SHEET_SIZE * DEST_SHEET_SIZE * numSheetsRequired);
-			if(bitmapData)
+			if(numSheetsRequired > 0)
 			{
-				memset(bitmapData, 0xAAU, sizeof(Pixel) * DEST_SHEET_SIZE * DEST_SHEET_SIZE * numSheetsRequired);
-				for(int i = 1; i < argc; ++i)
+				/* rows, then columns, then sheets */
+				Pixel* bitmapData = malloc(sizeof(Pixel) * DEST_SHEET_SIZE * DEST_SHEET_SIZE * numSheetsRequired);
+				if(bitmapData)
 				{
-					loadBitmap(fileSprite + (i-1), bitmapData);
+					memset(bitmapData, 0xAAU, sizeof(Pixel) * DEST_SHEET_SIZE * DEST_SHEET_SIZE * numSheetsRequired);
+					for(int i = 1; i < argc; ++i)
+					{
+						loadBitmap(fileSprite + (i-1), bitmapData);
+					}
+					dumpBitmap(bitmapData, numSheetsRequired);
+					dumpJson(fileSprite, argc-1);
+					free(bitmapData);
 				}
-				dumpBitmap(bitmapData, numSheetsRequired);
-				dumpJson(fileSprite, argc-1);
-				free(bitmapData);
+				else
+				{
+					TRACE("Failed to allocate temporary output buffers\n");
+				}
 			}
 			else
 			{
-				TRACE("Failed to allocate temporary output buffers\n");
+				TRACE("Error arranging\n");
 			}
 		}
 		else
