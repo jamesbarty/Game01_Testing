@@ -4,12 +4,13 @@ import Label from './label';
 import DrawTarget from './drawTarget';
 import DrawThroughContext from './drawThroughContext';
 import RGBA from './rgba';
+import Bitmap from './bitmap';
 import { Rect } from './geometry';
 import SpriteSheet from './spriteSheet';
 
 export interface IButtonParams extends IMouseInteractiveParams {
 	text: string;
-	styles: RGBA[];
+	styles: RGBA[] | Bitmap[];
 	spriteSheet: SpriteSheet;
 }
 
@@ -22,7 +23,7 @@ const enum ButtonStates {
 export default class Button extends MouseInteractive {
 	label: Label;
 	state: ButtonStates;
-	styles: RGBA[];
+	styles: RGBA[] | Bitmap[];
 	spriteSheet: SpriteSheet;
 
 	constructor(params: IButtonParams) {
@@ -48,34 +49,54 @@ export default class Button extends MouseInteractive {
 	}
 
 	_onMouseDown(e: MouseEvt) {
-		this.state = ButtonStates.active;
 		super._onMouseDown.call(this, e);
+		this.state = ButtonStates.active;
+		this.onButtonDown();
 	}
 
 	_onMouseUp(e: MouseEvt) {
-		this.state = ButtonStates.hover;
 		super._onMouseUp.call(this, e);
+		this.onButtonUp();
+		this.state = ButtonStates.hover;
 	}
 
 	_onMouseEnter(e: MouseEvt) {
+		super._onMouseEnter.call(this, e);
 		if (this.maybeClicked) {
 			this.state = ButtonStates.active;
+			this.onButtonDown();
 		}
 		else {
 			this.state = ButtonStates.hover;
 		}
-		super._onMouseEnter.call(this, e);
 	}
 
 	_onMouseLeave(e: MouseEvt) {
-		this.state = ButtonStates.none;
 		super._onMouseLeave.call(this, e);
+		if (this.state = ButtonStates.active) {
+			this.onButtonUp();
+		}
+		this.state = ButtonStates.none;
 	}
 
 	draw(drawTarget: DrawTarget) {
-		const r = new Rect(0, 0, this.size.width, this.size.height);
-		drawTarget.pushDrawFillRect(r, this.styles[this.state]);
+		const drawStyle = this.styles[this.state];
+		if (drawStyle instanceof RGBA) {
+			const r = new Rect(0, 0, this.size.width, this.size.height);
+			drawTarget.pushDrawFillRect(r, drawStyle);
+		}
+		else {
+			drawStyle.draw(drawTarget);
+		}
 		const l = this.label;
 		l.draw(new DrawThroughContext(drawTarget, l.truePosition.left, l.truePosition.top, l.size.width, l.size.height));
+	}
+
+	onButtonDown() {
+
+	}
+
+	onButtonUp() {
+
 	}
 }

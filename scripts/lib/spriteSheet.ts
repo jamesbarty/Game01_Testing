@@ -82,10 +82,9 @@ export default class SpriteSheet {
 		if (this.loaded === false) {
 			throw `Cannot get frame from empty spritesheet`;
 		}
-		let lowerKey = key.toLowerCase();
-		if (this.frames[lowerKey] === undefined) {
-			throw `No frame with key ${lowerKey} could be found`;
+		if (this.frames[key] === undefined) {
+			throw `No frame with key ${key} could be found`;
 		}
-		return this.frames[lowerKey];
+		return this.frames[key];
 	}
 }

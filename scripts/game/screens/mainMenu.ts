@@ -8,11 +8,19 @@ import RGBA from '../../lib/rgba';
 import * as Constants from '../../lib/constants';
 import { TransitionType } from '../screenManager';
 
-export default class MainMenu extends Screen {
+export default class MainMenuScreen extends MouseInteractive {
+	game: GameEngine;
 
 	constructor(game: GameEngine) {
-		super("MainMenuScreen", game);
+		super({
+			name: "MainMenuScreen",
+			size: {
+				width: Constants.LOGICAL_CANVAS_WIDTH,
+				height: Constants.LOGICAL_CANVAS_HEIGHT
+			}
+		});
 
+		this.game = game;
 		this.buildUi();
 	}
 
@@ -56,7 +64,7 @@ export default class MainMenu extends Screen {
 			spriteSheet: this.game.spriteSheets[Constants.SPRITESHEET_MAIN]
 		});
 		btnNewGame.onClick = () => {
-			this.game.screenManager.setScreen(this.game.screens['worldMap'], TransitionType.Cut);
+			this.game.goToScreen(GameEngine.Screen.TacticsScreen);
 		}
 
 		let btnLoadGame = new Button({
@@ -94,8 +102,8 @@ export default class MainMenu extends Screen {
 		menuBoard.addChild(btnNewGame);
 		menuBoard.addChild(btnLoadGame);
 
-		this.rootElement.addChild(background);
-		this.rootElement.addChild(title);
-		this.rootElement.addChild(menuBoard);
+		this.addChild(background);
+		this.addChild(title);
+		this.addChild(menuBoard);
 	}
 }

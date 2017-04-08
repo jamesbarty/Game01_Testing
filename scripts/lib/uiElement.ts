@@ -1,14 +1,9 @@
 //import DrawThroughContext from './drawThroughContext';
-import { isFunction, randBetween, vAlign, hAlign } from './util';
+import { AnimationType, isFunction, ITopLeftPos, randBetween, vAlign, hAlign } from './util';
 import DrawTarget from './drawTarget';
 import DrawThroughContext from './drawThroughContext';
 import RGBA from './rgba';
 import { Rect } from './geometry';
-
-enum AnimationType {
-	Opacity,
-	Position
-}
 
 interface IAnimation {
 	animType: AnimationType;
@@ -22,11 +17,6 @@ interface IAnimation {
 	complete: boolean;
 }
 
-interface ITopLeftPos {
-	left: number;
-	top: number;
-}
-
 export interface IUiElementParams {
 	name?: string;
 	size?: {
@@ -38,6 +28,7 @@ export interface IUiElementParams {
 	vAlign?: vAlign;
 	hAlign?: hAlign;
 	position?: ITopLeftPos;
+	bgColor?: RGBA;
 }
 
 let uniqueId = 0;
@@ -56,6 +47,7 @@ export default class UiElement {
 	protected parent: UiElement;
 	protected vAlign: vAlign;
 	protected visible: boolean;
+	protected bgColor: RGBA;
 	private animations: IAnimation[];
 	private opacity: number;
 	r: number;
@@ -82,6 +74,7 @@ export default class UiElement {
 		this.parent = params.parent || null;
 		this.vAlign = params.vAlign || 'top';
 		this.hAlign = params.hAlign || 'left';
+		this.bgColor = params.bgColor || RGBA.kindaBlack; //RGBA.blank;
 		this._position = params.position || { left: 0, top: 0 };
 		this.animations = [];
 
@@ -93,12 +86,12 @@ export default class UiElement {
 	}
 
 	show(show: boolean) {
-		console.log('UiElement ' + this.id + ' shown');
+		//console.log('UiElement ' + this.id + ' shown');
 		this.visible = show;
 	}
 
 	setPosition(top: number, left: number) {
-		console.log('UiElement ' + this.id + ' position set');
+		//console.log('UiElement ' + this.id + ' position set');
 		this._position.top = top;
 		this._position.left = left;
 		this.calculateTruePosition();
@@ -109,6 +102,15 @@ export default class UiElement {
 		for (var i = 0; i < this.children.length; i++) {
 			this.children[i].parentDimensionsChanged();
 		}
+		this.calculateTruePosition();
+	}
+
+	setHeight(height: number) {
+		this._size.height = height;
+		for (var i = 0; i < this.children.length; i++) {
+			this.children[i].parentDimensionsChanged();
+		}
+		this.calculateTruePosition();
 	}
 
 	parentDimensionsChanged() {
@@ -155,7 +157,7 @@ export default class UiElement {
 	}
 
 	addChild(child: UiElement) {
-		console.log('UiElement ' + this.id + ' got child ' + child.id);
+		//console.log('UiElement ' + this.id + ' got child ' + child.id);
 		if (child.parent !== null) {
 			console.error('Cannot add child: child already has a parent');
 			return;
@@ -174,6 +176,13 @@ export default class UiElement {
 		else {
 			console.warn("Failed to remove child: child not found");
 		}
+	}
+
+	removeAllChildren() {
+		for (let i = 0; i < this.children.length; i++) {
+			this.children[i].parent = null;
+		}
+		this.children = [];
 	}
 
 	animate(animType: AnimationType, value: any, duration: number, callback: () => void = null, easing: (t: number) => number, isAbsolute: boolean = true): void {
@@ -201,15 +210,19 @@ export default class UiElement {
 	}
 
 	_draw(drawTarget: DrawTarget) {
-		this.draw(drawTarget);
-		for (let i = 0; i < this.children.length; i++) {
-			let child = this.children[i];
-			child._draw(new DrawThroughContext(drawTarget, child.truePosition.left, child.truePosition.top, child.size.width, child.size.height));
+		if (this.visible) {
+			this.draw(drawTarget);
+			for (let i = 0; i < this.children.length; i++) {
+				let child = this.children[i];
+				child._draw(new DrawThroughContext(drawTarget, child.truePosition.left, child.truePosition.top, child.size.width, child.size.height));
+			}
 		}
 	}
 
 	draw(drawTarget: DrawTarget) {
-		drawTarget.pushDrawFillRect(new Rect(0, 0, this.size.width, this.size.height), new RGBA(0, 0, 0, 64));
+		if (this.bgColor !== null && this.bgColor !== RGBA.blank) {
+			drawTarget.pushDrawFillRect(new Rect(0, 0, this.size.width, this.size.height), this.bgColor);
+		}
 	}
 
 	_update(deltaTime: number) {
@@ -231,7 +244,9 @@ export default class UiElement {
 				anim.lifetime += deltaTime;
 				const t = Math.min(anim.lifetime / anim.duration, 1);
 				const factor = anim.easing(t);
-
+				//console.log(deltaTime);
+				//console.log(t);
+				//console.log(factor);
 				switch (anim.animType) {
 					case AnimationType.Opacity:
 						const oldOpacity = anim.oldValue as number;
@@ -244,8 +259,8 @@ export default class UiElement {
 						const newPos = anim.newValue as ITopLeftPos;
 						const diffTop = anim.isAbsolute ? newPos.top - oldPos.top : newPos.top;
 						const diffLeft = anim.isAbsolute ? newPos.left - oldPos.left : newPos.left;
-						const newTop = oldPos.top + diffTop * factor;
-						const newLeft = oldPos.left + diffLeft * factor;
+						const newTop = Math.floor(oldPos.top + diffTop * factor);
+						const newLeft = Math.floor(oldPos.left + diffLeft * factor);
 						this.setPosition(newTop, newLeft);
 						break;
 				}

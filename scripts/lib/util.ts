@@ -19,6 +19,20 @@ export interface INumberNumberMap extends INumberTMap<number> {};
 export interface IStringBooleanMap extends IStringTMap<boolean> {};
 export interface INumberBooleanMap extends INumberTMap<boolean> {};
 
+export interface ITopLeftPos {
+	left: number;
+	top: number;
+}
+
+export enum AnimationType {
+	Opacity,
+	Position
+}
+
+export let Easing = {
+	Linear: (t: number) => t
+}
+
 export function pointInRect(px: number, py: number, x: number, y: number, w: number, h: number) {
 	if (px < x ||
 		px >= x + w ||

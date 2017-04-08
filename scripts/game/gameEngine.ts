@@ -12,13 +12,19 @@ import SpriteSheet from '../lib/spriteSheet';
 import MouseEvt from '../lib/mouseEvent';
 import * as constants from "../lib/constants";
 import { IStringTMap } from '../lib/util';
-import Screen from './screen';
 import ScreenManager, { TransitionType } from './screenManager';
 import MainMenuScreen from './screens/mainMenu';
 import WorldMapScreen from './screens/worldMap';
+import TacticsScreen from './tactics/tacticsScreen';
 
 const FPS = 60;
 let canvasCount = 1;
+
+enum Screen {
+	MainMenuScreen,
+	WorldMapScreen,
+	TacticsScreen
+}
 
 export default class GameEngine {
 	private canvas: HTMLCanvasElement;
@@ -29,6 +35,8 @@ export default class GameEngine {
 	screens: IStringTMap<Screen>;
 	screenManager: ScreenManager;
 	private started: boolean;
+
+	static Screen = Screen;
 
 	constructor() {
 
@@ -54,6 +62,23 @@ export default class GameEngine {
 		});
 		let framez = constants.FAWNT_7PT_MAP;
 		framez["back"] = new Rect(0, 7, 294, 196);
+		framez["dirt"] = new Rect(0, 203, 16, 16);
+		framez["grass"] = new Rect(16, 203, 16, 16);
+		framez["black"] = new Rect(32, 203, 16, 16);
+		framez["left_up"] = new Rect(48, 203, 16, 16);
+		framez["left_down"] = new Rect(64, 203, 16, 16);
+		framez["up_up"] = new Rect(80, 203, 16, 16);
+		framez["up_down"] = new Rect(96, 203, 16, 16);
+		framez["right_up"] = new Rect(112, 203, 16, 16);
+		framez["right_down"] = new Rect(128, 203, 16, 16);
+		framez["down_up"] = new Rect(144, 203, 16, 16);
+		framez["down_down"] = new Rect(160, 203, 16, 16);
+		framez["spawn"] = new Rect(0, 219, 16, 16);
+		framez["spawnHighlight"] = new Rect(16, 219, 16, 16);
+		framez["spawnHighlightOccupied"] = new Rect(32, 219, 16, 16);
+		framez["frame"] = new Rect(176, 203, 16, 16);
+		framez["shroom"] = new Rect(192, 203, 12, 12);
+		framez["shroom2"] = new Rect(204, 203, 12, 12);
 		this.spriteSheets[constants.SPRITESHEET_MAIN].loadFrames({
 			frames: constants.FAWNT_7PT_MAP,
 			animations: {
@@ -70,21 +95,23 @@ export default class GameEngine {
 		});
 		this.rootLogicalConcrete = this.gfxEng.createConcreteContext(constants.LOGICAL_CANVAS_WIDTH, constants.LOGICAL_CANVAS_HEIGHT);
 
-		this.screenManager = new ScreenManager(this);
-		this.screens = {
+		//this.screenManager = new ScreenManager(this);
+		/*this.screens = {
 			mainMenu: new MainMenuScreen(this),
 			worldMap: new WorldMapScreen(this)
-		};
+		};*/
+		//this.rootElement.addChild(new MainMenuScreen(this));
 	}
 
 	start() {
 		let lastTime = performance.now();
 
-		this.screenManager.setScreen(this.screens["mainMenu"], TransitionType.Cut);
+		this.goToScreen(Screen.MainMenuScreen);
 
 		let gameLoop = setInterval(() => {
 			let curTime = performance.now();
-			let deltaTime = curTime = lastTime;
+			let deltaTime = curTime - lastTime;
+			lastTime = curTime;
 
 			this.gfxEng.getRootConcreteContext().clear(RGBA.blank);
 			this.rootLogicalConcrete.clear(RGBA.blank);
@@ -94,7 +121,7 @@ export default class GameEngine {
 
 			this.gfxEng.getRootConcreteContext().pushDrawConcrete(new Rect(0, 0, constants.LOGICAL_CANVAS_WIDTH, constants.LOGICAL_CANVAS_HEIGHT), this.rootLogicalConcrete);
 
-			lastTime = curTime;
+			
 		}, Math.floor(1000 / FPS));
 	}
 
@@ -126,5 +153,22 @@ export default class GameEngine {
 
 	removeChild(child: MouseInteractive) {
 		this.rootElement.removeChild(child);
+	}
+
+	goToScreen(screen: Screen) {
+		const { rootElement } = this;
+
+		rootElement.removeAllChildren();
+		switch(screen) {
+			case Screen.MainMenuScreen:
+				rootElement.addChild(new MainMenuScreen(this));
+				break;
+			case Screen.WorldMapScreen:
+				rootElement.addChild(new WorldMapScreen(this));
+				break;
+			case Screen.TacticsScreen:
+				rootElement.addChild(new TacticsScreen(this));
+				break;
+		}
 	}
 }

@@ -1,9 +1,9 @@
 import { IStringTMap } from './util';
 import { Rect } from './geometry';
 
-export const LOGICAL_CANVAS_WIDTH: number = 264;
-export const LOGICAL_CANVAS_HEIGHT: number = 196;
-export const LOGICAL_PIXEL_EDGE: number = 4;
+export const LOGICAL_CANVAS_WIDTH: number = 344;
+export const LOGICAL_CANVAS_HEIGHT: number = 240;
+export const LOGICAL_PIXEL_EDGE: number = 3;
 export const SCREEN_CANVAS_WIDTH: number = LOGICAL_CANVAS_WIDTH * LOGICAL_PIXEL_EDGE;
 export const SCREEN_CANVAS_HEIGHT: number = LOGICAL_CANVAS_HEIGHT * LOGICAL_PIXEL_EDGE;
 export const SPRITESHEET_MAIN = "mainSpriteSheet";
@@ -74,5 +74,6 @@ export const FAWNT_7PT_MAP: IStringTMap<Rect> = {
 	"?": new Rect(259, 0, 6, 7),
 	"<": new Rect(265, 0, 4, 7),
 	">": new Rect(269, 0, 4, 7),
-	" ": new Rect(273, 0, 5, 7)
+	" ": new Rect(273, 0, 5, 7),
+	"/": new Rect(278, 0, 6, 7)
 }

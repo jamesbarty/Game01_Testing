@@ -21,8 +21,12 @@ export default class Bitmap extends MouseInteractive {
 		this.frame = this.spriteSheet.getFrame(params.frameKey);
 	}
 
+	setFrame(frameName: string) {
+		this.frame = this.spriteSheet.getFrame(frameName);
+	}
+
 	draw(drawTarget: DrawTarget) {
-		const destRect = new Rect(this.truePosition.left, this.truePosition.top, this.frame.w, this.frame.h);
+		const destRect = new Rect(0, 0, this.frame.w, this.frame.h);
 		drawTarget.pushDrawConcrete(destRect, this.spriteSheet.concrete, 1, RGBA.blank, this.frame);
 	}
 }

@@ -60,7 +60,7 @@ export default class Label extends MouseInteractive {
 	}
 
 	draw(drawTarget: DrawTarget) {
-		//super.draw(drawTarget);
+		super.draw(drawTarget);
 		for (let i = 0; i < this.textLines.length; i++) {
 			let drawX = 0;
 			let line = this.textLines[i];
@@ -69,7 +69,7 @@ export default class Label extends MouseInteractive {
 			let srcRect = new Rect();
 			for (let j = 0; j < line.text.length; j++) {
 				const char = line.text[j];
-				const frame = this.spriteSheet.getFrame(char);
+				const frame = this.spriteSheet.getFrame(char.toLowerCase());
 				destRect.x = drawX + linePosition.x;
 				destRect.y = linePosition.y;
 				destRect.w = frame.w;
@@ -77,26 +77,6 @@ export default class Label extends MouseInteractive {
 				drawTarget.pushDrawConcrete(destRect, this.spriteSheet.concrete, 1, RGBA.blank, frame);
 				drawX += frame.w;
 			}
-		}
-	}
-
-	_update(deltaTime: number) {
-		super._update(deltaTime);
-		return;
-		this.frame += 1;
-		if (this.frame >= 60) {
-			this.frame = 0;
-			this.text = '';
-			var possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
-			for (var i = 0; i < 80; i++) {
-				if ((i + 1) % 9 === 0) {
-					this.text += ' ';
-					continue;
-				}
-				this.text += possible[Util.randBetween(0, possible.length - 1)];
-			}
-			console.log(this.text);
-			this.updateText();
 		}
 	}
 
@@ -211,7 +191,7 @@ export default class Label extends MouseInteractive {
 					x = 0;
 					break;
 				case 'center':
-					x = Math.floor((this.size.width - this.textLines[i].width) / 2);
+					x = Math.ceil((this.size.width - this.textLines[i].width) / 2);
 					break;
 				case 'right':
 					x = this.size.width - this.textLines[i].width;
@@ -252,5 +232,10 @@ export default class Label extends MouseInteractive {
 
 	setText(text: string) {
 		this.text = text;
+		this.updateText();
+	}
+
+	getText() {
+		return this.text;
 	}
 }
