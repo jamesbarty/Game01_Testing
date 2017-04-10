@@ -93,14 +93,11 @@ export default class GameEngine {
 				height: constants.LOGICAL_CANVAS_HEIGHT
 			}
 		});
+		
 		this.rootLogicalConcrete = this.gfxEng.createConcreteContext(constants.LOGICAL_CANVAS_WIDTH, constants.LOGICAL_CANVAS_HEIGHT);
 
-		//this.screenManager = new ScreenManager(this);
-		/*this.screens = {
-			mainMenu: new MainMenuScreen(this),
-			worldMap: new WorldMapScreen(this)
-		};*/
-		//this.rootElement.addChild(new MainMenuScreen(this));
+		/* DEBUG */
+		(window as any)["root"] = this.rootElement;
 	}
 
 	start() {

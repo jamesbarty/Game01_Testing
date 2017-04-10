@@ -7,22 +7,30 @@ import { Rect } from '../../lib/geometry';
 import RGBA from '../../lib/rgba';
 import SpriteSheet from '../../lib/spriteSheet';
 
+export enum Team {
+	Player,
+	Enemy
+}
+
 interface IUnitParams extends IMouseInteractiveParams {
 	unitName: string;
 	spriteSheet: SpriteSheet;
+	team: Team;
 }
 
 export default class Unit extends MouseInteractive {
+	team: Team;
 	unitName: string;
 	health: number;
 	maxHealth: number;
 	actionBar: number;
-	static maxActionBar: number = 10000;
+	static maxActionBar: number = 1000;
 	static actionYellow = new RGBA(255, 216, 0);
 	static healthRed = new RGBA(255, 124, 124);
 	static barBack = new RGBA(130, 130, 130);
 
 	speed: number;
+	move: number;
 	attack: number;
 	defense: number;
 	intellect: number;
@@ -34,6 +42,7 @@ export default class Unit extends MouseInteractive {
 	constructor(params: IUnitParams) {
 		super(params);
 
+		this.team = params.team;
 		this.unitName = params.unitName;
 		this.loadStats();
 
@@ -71,6 +80,7 @@ export default class Unit extends MouseInteractive {
 		this.maxHealth = bestiaryEntry.health;
 		this.actionBar = 0;
 		this.speed = bestiaryEntry.speed;
+		this.move = bestiaryEntry.move;
 		this.attack = bestiaryEntry.attack;
 		this.defense = bestiaryEntry.defense;
 		this.intellect = bestiaryEntry.intellect;
@@ -79,9 +89,19 @@ export default class Unit extends MouseInteractive {
 
 	draw(drawTarget: DrawTarget) {
 		const { health, maxHealth, actionBar } = this;
+		const actionBarHeight = Math.ceil(12 * actionBar / Unit.maxActionBar);
+		const healthBarWidth = Math.ceil(13 * health / maxHealth);
 		drawTarget.pushDrawFillRect(new Rect(1, 1, 2, 12), Unit.barBack);
-		drawTarget.pushDrawFillRect(new Rect(1, 1, 2, 12 * Math.ceil(actionBar / Unit.maxActionBar)), Unit.actionYellow);
+		drawTarget.pushDrawFillRect(new Rect(1, 13 - actionBarHeight, 2, actionBarHeight), Unit.actionYellow);
 		drawTarget.pushDrawFillRect(new Rect(2, 13, 13, 2), Unit.barBack);
-		drawTarget.pushDrawFillRect(new Rect(2, 13, 13 * Math.ceil(health / maxHealth), 2), Unit.healthRed);
+		drawTarget.pushDrawFillRect(new Rect(2, 13, healthBarWidth, 2), Unit.healthRed);
+	}
+
+	tick() {
+		this.actionBar += this.speed;
+	}
+
+	getMoveRange() {
+		return this.move;
 	}
 }

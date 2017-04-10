@@ -50,9 +50,6 @@ export default class UiElement {
 	protected bgColor: RGBA;
 	private animations: IAnimation[];
 	private opacity: number;
-	r: number;
-	g: number;
-	b: number;
 
 	public get position() {
 		return Object.assign({}, this._position);
@@ -69,18 +66,14 @@ export default class UiElement {
 		this.name = params.name || "unnamed";
 		this._truePosition = { left: 0, top: 0 };
 		this._size = params.size || { width: 0, height: 0 };
-		this.visible = params.visible || true;
+		this.visible = params.visible !== undefined ? params.visible : true;
 		this.children = [];
 		this.parent = params.parent || null;
 		this.vAlign = params.vAlign || 'top';
 		this.hAlign = params.hAlign || 'left';
-		this.bgColor = params.bgColor || RGBA.kindaBlack; //RGBA.blank;
+		this.bgColor = params.bgColor || RGBA.blank;
 		this._position = params.position || { left: 0, top: 0 };
 		this.animations = [];
-
-		this.r = randBetween(0, 255);
-		this.g = randBetween(0, 255);
-		this.b = randBetween(0, 255);
 
 		this.calculateTruePosition();
 	}

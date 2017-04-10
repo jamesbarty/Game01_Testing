@@ -12,25 +12,36 @@ import * as Constants from '../../lib/constants';
 import { ITacticsMap, spawnPosition } from '../maps/maps';
 import level1 from '../maps/tactics/level1';
 import Bestiary from './bestiary';
-import Unit from './unit';
+import Unit, { Team } from './unit';
+import Button from '../../lib/button';
+import Tile, { TileOverlay } from './tile';
 
 type UnitData = IStringTMap<number>;
+
+enum GamePhase {
+	Placement,
+	Started,
+	PlayerTurn
+}
 
 export default class TacticsScreen extends MouseInteractive {
 	private mapContainer: MouseInteractive;
 	private tileContainer: MouseInteractive;
 	private placementContainer: MouseInteractive;
-	private listEntryQuantities: IStringTMap<Label>;
+	private placementItems: IStringTMap<PlacementItem>;
 	private infoPanel: MouseInteractive;
 	private tileMap: Tile[][];
-	private spawnMap: SpawnPoint[];
-	private selectedSpawn: SpawnPoint;
+	private selectedTile: Tile;
 	private curMap: ITacticsMap;
 	private tileWidth: number;
 	private tileHeight: number;
 	private maxTilesX: number;
 	private maxTilesY: number;
 	private game: GameEngine;
+	private units: Unit[];
+	private gamePhase: GamePhase;
+	private actionTickDuration: number;
+	private actionTickCount: number;
 
 	private mockUnits: UnitData;
 
@@ -40,7 +51,8 @@ export default class TacticsScreen extends MouseInteractive {
 			size: {
 				width: Constants.LOGICAL_CANVAS_WIDTH,
 				height: Constants.LOGICAL_CANVAS_HEIGHT
-			}
+			},
+			bgColor: RGBA.white
 		});
 
 		this.mockUnits = {
@@ -49,16 +61,19 @@ export default class TacticsScreen extends MouseInteractive {
 		};
 
 		this.game = game;
+		this.gamePhase = GamePhase.Placement;
 		this.mapContainer = null;
 		this.tileContainer = null;
 		this.placementContainer = null;
-		this.listEntryQuantities = {};
-		this.selectedSpawn = null;
+		this.placementItems = {};
+		this.selectedTile = null;
 		this.curMap = level1;
 		this.tileWidth = 16;
 		this.tileHeight = 16;
 		this.maxTilesX = 15;
 		this.maxTilesY = 15;
+		this.actionTickDuration = 20;
+		this.actionTickCount = 0;
 		this.buildUi();
 		this.initMap(this.curMap);
 	}
@@ -75,7 +90,8 @@ export default class TacticsScreen extends MouseInteractive {
 			size: {
 				width: tileWidth * maxTilesX,
 				height: tileHeight * maxTilesY
-			}
+			},
+			bgColor: RGBA.lightGrey
 		});
 
 		this.tileContainer = new MouseInteractive({
@@ -92,7 +108,7 @@ export default class TacticsScreen extends MouseInteractive {
 			},
 			size: {
 				width: Constants.LOGICAL_CANVAS_WIDTH - tileWidth * maxTilesX,
-				height: Constants.LOGICAL_CANVAS_HEIGHT
+				height: Math.floor(Constants.LOGICAL_CANVAS_HEIGHT / 2)
 			}
 		});
 
@@ -131,7 +147,7 @@ export default class TacticsScreen extends MouseInteractive {
 			bgColor: RGBA.lightGrey
 		});
 
-		const listEntryContainer = new MouseInteractive({
+		const placementItemContainer = new MouseInteractive({
 			name: `TacticsScreen-listEntryContainer`,
 			position: {
 				left: 0,
@@ -139,13 +155,13 @@ export default class TacticsScreen extends MouseInteractive {
 			},
 			size: {
 				width: 104,
-				height: 500
+				height: Math.floor(Constants.LOGICAL_CANVAS_HEIGHT / 2)
 			}
 		});
 
 		Object.keys(mockUnits).forEach((unitName, i) => {
 			const unitQty = mockUnits[unitName];
-			const listEntry = new MouseInteractive({
+			const placementItem = new PlacementItem({
 				position: {
 					left: 0,
 					top: i * 9
@@ -154,52 +170,58 @@ export default class TacticsScreen extends MouseInteractive {
 					width: 104,
 					height: 9
 				},
-				bgColor: RGBA.white
-			});
-			const listEntryTitle = new Label({
-				name: `TacticsScreen-listEntryTitle-${unitName}`,
-				text: `${unitName}`,
 				spriteSheet: game.spriteSheets[Constants.SPRITESHEET_MAIN],
-				position: {
-					left: 2,
-					top: 0
-				},
-				size: {
-					width: 94,
-					height: 9
-				},
-				textVAlign: 'center',
-				bgColor: RGBA.blank
+				unitName: unitName,
+				quantity: unitQty
 			});
-			const listEntryQuantity = new Label({
-				name: `TacticsScreen-listEntryQuantity-${unitName}`,
-				text: `x${unitQty}`,
-				spriteSheet: game.spriteSheets[Constants.SPRITESHEET_MAIN],
-				position: {
-					left: -2,
-					top: 0
-				},
-				size: {
-					width: 94,
-					height: 9
-				},
-				hAlign: 'right',
-				textHAlign: 'right',
-				textVAlign: 'center',
-				bgColor: RGBA.blank
-			});
-			this.listEntryQuantities[unitName] = listEntryQuantity;
-			listEntry.addChild(listEntryTitle);
-			listEntry.addChild(listEntryQuantity);
-			listEntryContainer.addChild(listEntry);
 
-			listEntry.onClick = () => {
+			this.placementItems[unitName] = placementItem;
+			placementItemContainer.addChild(placementItem);
+
+			placementItem.onClick = () => {
 				this.selectUnit(unitName);
 			}
-		})
+		});
+
+		const startBtn = new Button({
+			text: "Start Game",
+			spriteSheet: this.game.spriteSheets[Constants.SPRITESHEET_MAIN],
+			size: {
+				width: this.placementContainer.size.width,
+				height: 9
+			},
+			styles: [RGBA.lightGrey, RGBA.mediumGrey, RGBA.darkGrey],
+			position: {
+				left: 0,
+				top: -9
+			},
+			vAlign: 'bottom'
+		});
+		startBtn.onClick = () => {
+			this.startGame();
+		}
+		const removeBtn = new Button({
+			text: "Remove Unit",
+			spriteSheet: this.game.spriteSheets[Constants.SPRITESHEET_MAIN],
+			size: {
+				width: this.placementContainer.size.width,
+				height: 9
+			},
+			styles: [RGBA.lightGrey, RGBA.mediumGrey, RGBA.darkGrey],
+			position: {
+				left: 0,
+				top: 0
+			},
+			vAlign: 'bottom'
+		});
+		removeBtn.onClick = () => {
+			this.removeUnit();
+		}
 
 		this.placementContainer.addChild(title);
-		this.placementContainer.addChild(listEntryContainer);
+		this.placementContainer.addChild(placementItemContainer);
+		this.placementContainer.addChild(startBtn);
+		this.placementContainer.addChild(removeBtn);
 	}
 
 	populateInfoPanel(unit: Unit) {
@@ -283,6 +305,8 @@ export default class TacticsScreen extends MouseInteractive {
 			for (let c = 0; c < curMap.width; c++) {
 				let frame = curMap.map[r][c];
 				const tile = new Tile({
+					x: c,
+					y: r,
 					spriteSheet: game.spriteSheets[Constants.SPRITESHEET_MAIN],
 					position: {
 						left: c * tileWidth,
@@ -293,15 +317,7 @@ export default class TacticsScreen extends MouseInteractive {
 						height: tileHeight
 					}
 				});
-				const tileBg = new Bitmap({
-					spriteSheet: game.spriteSheets[Constants.SPRITESHEET_MAIN],
-					frameKey: frame,
-					size: {
-						width: tileWidth,
-						height: tileHeight
-					}
-				});
-				tile.setBackground(tileBg);
+				tile.setBackgroundFrame(frame);
 				tile.onMouseEnter = () => {
 					if (tile.isOccupied()) {
 						this.populateInfoPanel(tile.occupant);
@@ -317,27 +333,13 @@ export default class TacticsScreen extends MouseInteractive {
 
 		this.buildPlacement();
 
-		this.spawnMap = [];
 		for (let i = 0; i < curMap.spawns.length; i++) {
 			const spawn = curMap.spawns[i];
-			const spawnPoint = new SpawnPoint({
-				x: spawn.x,
-				y: spawn.y,
-				spriteSheet: game.spriteSheets[Constants.SPRITESHEET_MAIN],
-				position: {
-					left: spawn.x * tileWidth,
-					top: spawn.y * tileHeight
-				},
-				size: {
-					width: tileWidth,
-					height: tileHeight
-				}
-			});
-			spawnPoint.onClick = () => {
-				this.selectSpawn(spawnPoint);
-			}
-			this.spawnMap.push(spawnPoint);
-			tileContainer.addChild(spawnPoint);
+			const targetTile = this.tileMap[spawn.y][spawn.x];
+			targetTile.setOverlay(TileOverlay.Spawn);
+			targetTile.onClick = () => {
+				this.selectTile(targetTile);
+			};
 		}
 
 		this.placeEnemies();
@@ -348,6 +350,7 @@ export default class TacticsScreen extends MouseInteractive {
 		for (var i = 0; i < curMap.enemies.length; i++) {
 			const enemy = curMap.enemies[i];
 			const enemyUnit = new Unit({
+				team: Team.Enemy,
 				unitName: enemy.name,
 				spriteSheet: game.spriteSheets[Constants.SPRITESHEET_MAIN],
 				size: {
@@ -359,27 +362,28 @@ export default class TacticsScreen extends MouseInteractive {
 		}
 	}
 
-	selectSpawn(spawn: SpawnPoint) {
-		if (this.selectedSpawn !== null) {
-			this.selectedSpawn.deselect();
+	selectTile(tile: Tile) {
+		if (this.selectedTile !== null) {
+			this.selectedTile.deselect();
 		}
-		this.selectedSpawn = spawn;
-		spawn.select();
+		this.selectedTile = tile;
+		tile.select();
 	}
 
 	selectUnit(unit: string) {
 		const { game } = this;
-		if (this.selectedSpawn != null) {
+		if (this.selectedTile != null) {
 			if (this.mockUnits[unit] > 0) {
-				const { x, y } = this.selectedSpawn;
+				const { x, y } = this.selectedTile;
 				const tile = this.tileMap[y][x];
 				if (tile.isOccupied()) {
-					const oldLabel = this.listEntryQuantities[tile.occupant.unitName];
+					const placementItem = this.placementItems[tile.occupant.unitName];
 					this.mockUnits[tile.occupant.unitName] += 1;
-					oldLabel.setText("x" + this.mockUnits[tile.occupant.unitName]);
+					placementItem.updateQuantity(this.mockUnits[tile.occupant.unitName]);
 					tile.vacate();
 				}
-				this.tileMap[y][x].occupy(new Unit({
+				tile.occupy(new Unit({
+					team: Team.Player,
 					unitName: unit,
 					spriteSheet: game.spriteSheets[Constants.SPRITESHEET_MAIN],
 					size: {
@@ -388,109 +392,205 @@ export default class TacticsScreen extends MouseInteractive {
 					}
 				}));
 				this.mockUnits[unit] -= 1;
-				const newLabel = this.listEntryQuantities[unit];
-				newLabel.setText("x" + this.mockUnits[unit]);
-				this.selectedSpawn.occupy();
-				this.selectedSpawn = null;
+				const newPlacementItem = this.placementItems[unit];
+				newPlacementItem.updateQuantity(this.mockUnits[unit]);
+				this.selectedTile.deselect();
+				this.selectedTile = null;
 			}
 		}
 	}
+
+	startGame() {
+		const { curMap } = this;
+		this.units = [];
+		// Clear any unused spawns, add units to the player list
+		this.tileMap.forEach((row) => { 
+			row.forEach((tile) => {
+				tile.setOverlay(TileOverlay.None);
+				if (tile.isOccupied()) {
+					this.units.push(tile.occupant);
+				}
+			});
+		});
+
+		this.removeChild(this.placementContainer);
+		this.gamePhase = GamePhase.Started;
+	}
+
+	removeUnit() {
+		const { selectedTile } = this;
+		// This kinda doesn't work
+		if (selectedTile != null && selectedTile.isOccupied() && selectedTile.occupant.team === Team.Player) {
+			const occupant = selectedTile.occupant;
+			this.mockUnits[occupant.unitName] += 1;
+			this.placementItems[occupant.unitName].updateQuantity(this.mockUnits[occupant.unitName]);
+			selectedTile.vacate();
+			selectedTile.select();
+		}
+	}
+
+	update(deltaTime: number) {
+		if (this.gamePhase === GamePhase.Started) {
+			// check if anyone is ready
+			for (let i = 0; i < this.units.length; i++) {
+				const unit = this.units[i];
+				if (unit.actionBar >= Unit.maxActionBar) {
+					// take turn
+					if (unit.team === Team.Enemy) {
+						this.performEnemyTurn(unit);
+					}
+					else {
+						this.gamePhase = GamePhase.PlayerTurn;
+						// set info panel
+						this.buildMovementOverlay(unit);
+					}
+					return;
+				}
+			}
+			this.actionTickCount += deltaTime;
+			if (this.actionTickCount > this.actionTickDuration) {
+				this.actionTickCount -= this.actionTickDuration;
+				for (let i = 0; i < this.units.length; i++) {
+					this.units[i].tick();
+				}
+			}
+		}
+	}
+
+	performEnemyTurn(unit: Unit) {
+		unit.actionBar = 0;
+		console.log('yo I went jk');
+	}
+
+	buildMovementOverlay(unit: Unit) {
+		let foundTile: Tile = null;
+		for (let r = 0; r < this.tileMap.length; r++) {
+			const row = this.tileMap[r];
+			for (let c = 0; c < row.length; c++) {
+				const tile = row[c];
+				if (tile.isOccupied() && tile.occupant === unit) {
+					foundTile = tile;
+					break;
+				}
+			}
+		}
+		if (foundTile === null) {
+			console.error(`Could not find tile with that unit`);
+			return;
+		}
+		const moveRange = unit.getMoveRange();
+		const tilesInRange = this.getTilesInRange(foundTile, moveRange);
+		tilesInRange.forEach(tile => {
+			tile.setOverlay(TileOverlay.Target);
+		});
+	}
+
+	getTilesInRange(tile: Tile, range: number) {
+		let tiles: Tile[] = [];
+		let searchedMap: IStringTMap<Tile> = {};
+		let curTiles: Tile[] = [tile];
+		while (range > 0 && curTiles.length > 0) {
+			let newTiles: Tile[] = [];
+			curTiles.forEach(c => {
+				let neighbours = this.getNeighbours(c);
+				neighbours.forEach(n => {
+					const hashKey = n.x * this.tileMap.length + n.y;
+					// Skip tiles already considered
+					if (searchedMap[hashKey]) {
+						return;
+					}
+					searchedMap[hashKey] = n;
+					if (!n.isOccupied()) {
+						// Consider this guy's neighbours next time
+						newTiles.push(n);
+						tiles.push(n);
+					}
+				});
+			});
+			curTiles = newTiles;
+			range -= 1;
+		}
+		return tiles;
+	}
+
+	getNeighbours(tile: Tile) {
+		const { tileMap } = this;
+		let neighbours = [];
+		const { x, y } = tile;
+		if (x > 0) {
+			neighbours.push(tileMap[y][x - 1]);
+		}
+		if (x < tileMap[0].length - 1) {
+			neighbours.push(tileMap[y][x + 1]);
+		}
+		if (y > 0) {
+			neighbours.push(tileMap[y - 1][x]);
+		}
+		if (y < tileMap.length - 1) {
+			neighbours.push(tileMap[y + 1][x]);
+		}
+		return neighbours;
+	}
 }
 
-interface ISpawnPointParams extends IMouseInteractiveParams {
-	x: number;
-	y: number;
-	spriteSheet: SpriteSheet
-}
-
-class SpawnPoint extends Bitmap {
-	x: number;
-	y: number;
-	occupied: boolean;
-
-	constructor(params: ISpawnPointParams) {
-		super(Object.assign(params, {
-			frameKey: "spawn"
-		}));
-		this.x = params.x;
-		this.y = params.y;
-	}
-
-	isOccupied() {
-		return this.occupied;
-	}
-
-	occupy() {
-		this.occupied = true;
-		this.show(false);
-	}
-
-	vacate() {
-		this.occupied = false;
-		this.show(true);
-	}
-
-	select() {
-		if (this.isOccupied()) {
-			this.show(true);
-			this.setFrame("spawnHighlightOccupied")
-		}
-		else {
-			this.setFrame("spawnHighlight");
-		}
-	}
-
-	deselect() {
-		if (this.isOccupied()) {
-			this.show(false);
-		}
-		else {
-			this.setFrame("spawn");
-		}
-	}
-
-}
-
-
-
-interface ITileParams extends IMouseInteractiveParams {
+interface IPlacementItemParams extends IMouseInteractiveParams {
 	spriteSheet: SpriteSheet;
+	unitName: string;
+	quantity: number;
 }
 
-class Tile extends MouseInteractive {
-	private background: Bitmap;
-	occupant: Unit;
-	private spriteSheet: SpriteSheet;
+class PlacementItem extends Button {
+	unitName: string;
+	quantity: number;
+	unitLabel: Label;
+	quantityLabel: Label;
 
-	constructor(params: ITileParams) {
-		super(params);
-		
-		this.background = null;
-		this.occupant = null;
-		this.spriteSheet = params.spriteSheet;
+	constructor(params: IPlacementItemParams) {
+		super(Object.assign(params, {
+			text: '',
+			spriteSheet: params.spriteSheet,
+			styles: [RGBA.white, RGBA.lightGrey, RGBA.mediumGrey]
+		}));
+
+		this.unitName = params.unitName;
+		this.quantity = params.quantity;
+
+		this.unitLabel = new Label({
+			spriteSheet: this.spriteSheet,
+			text: this.unitName,
+			size: {
+				width: 94,
+				height: 9
+			},
+			position: {
+				left: 2,
+				top: 0
+			},
+			textVAlign: 'center'
+		});
+
+		this.quantityLabel = new Label({
+			spriteSheet: this.spriteSheet,
+			text: `x${this.quantity}`,
+			size: {
+				width: 94,
+				height: 9
+			},
+			position: {
+				left: -2,
+				top: 0
+			},
+			textVAlign: 'center',
+			textHAlign: 'right',
+			hAlign: 'right'
+		});
+
+		this.addChild(this.unitLabel);
+		this.addChild(this.quantityLabel);
 	}
 
-	setBackground(bg: Bitmap) {
-		if (this.background != null) {
-			this.removeChild(this.background);
-		}
-		this.background = bg;
-		this.addChild(bg);
-	}
-
-	isOccupied() {
-		return this.occupant != null;
-	}
-
-	occupy(unit: Unit) {
-		this.occupant = unit;
-		this.addChild(unit);
-	}
-
-	vacate() {
-		if (this.occupant != null) {
-			this.removeChild(this.occupant);
-		}
-		this.occupant = null;
+	updateQuantity(quantity: number) {
+		this.quantity = quantity;
+		this.quantityLabel.setText(`x${this.quantity}`);
 	}
 }
