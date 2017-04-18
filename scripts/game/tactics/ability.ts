@@ -1,7 +1,8 @@
 import { IStringTMap } from '../../lib/util';
 import Unit from './unit';
+import Tile from './tile';
 
-enum ValidTarget {
+export enum ValidTarget {
 	Vacant,
 	Unit,
 	Self,
@@ -14,13 +15,12 @@ enum ValidTarget {
 	Any
 }
 
-type TargetDetails = {
-	targetType: RangeType;
-	range: number;
+export type TargetDetails = {
+	rangeDetails: RangeDetails;
 	validTarget: ValidTarget;
 }
 
-enum RangeType {
+export enum RangeType {
 	Bloom,
 	Square,
 	Cross,
@@ -28,35 +28,64 @@ enum RangeType {
 	All
 }
 
-type CastDetails = {
-	castType: RangeType;
+export type RangeDetails = {
+	rangeType: RangeType;
 	range: number;
 	self: boolean;
 }
 
 export interface Ability {
-	castDetails: CastDetails,
+	name: string;
+	castDetails: RangeDetails,
 	targetDetails: TargetDetails,
 	cooldown: number;
-	apply: (source: Unit, targets: Unit[]) => void;
+	apply: (source: Unit, targets: Tile[]) => void;
+	spriteNamespace: string;
+	spriteFrame: string;
 }
 
 const Abilities: IStringTMap<Ability> = {
 	slash: {
+		name: 'slash',
 		castDetails: {
-			castType: RangeType.Bloom,
+			rangeType: RangeType.Bloom,
 			range: 1,
 			self: false
 		},
 		targetDetails: {
-			targetType: RangeType.Bloom,
-			range: 1,
+			rangeDetails: {
+				rangeType: RangeType.Bloom,
+				range: 0,
+				self: true
+			},
 			validTarget: ValidTarget.Enemy
 		},
 		cooldown: 0,
-		apply: (source: Unit, targets: Unit[]) => {
-			targets[0].takeDamage(source.attack);
-		}
+		apply: (source: Unit, targets: Tile[]) => {
+			targets[0].occupant.takeDamage(source.attack);
+		},
+		spriteNamespace: 'tactics',
+		spriteFrame: 'shroom'
+	}
+}
+
+export class AbilityInstance implements Ability {
+	name: string;
+	castDetails: RangeDetails;
+	targetDetails: TargetDetails;
+	cooldown: number;
+	spriteNamespace: string;
+	spriteFrame: string;
+	apply: (source: Unit, targets: Tile[]) => void;
+
+	constructor(abil: Ability) {
+		this.name = abil.name;
+		this.castDetails = abil.castDetails;
+		this.targetDetails = abil.targetDetails;
+		this.cooldown = abil.cooldown;
+		this.apply = abil.apply;
+		this.spriteNamespace = abil.spriteNamespace;
+		this.spriteFrame = abil.spriteFrame;
 	}
 }
 

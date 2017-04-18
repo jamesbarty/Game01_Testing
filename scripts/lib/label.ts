@@ -5,7 +5,7 @@ import * as Util from './util';
 import DrawTarget from './drawTarget';
 import RGBA from './rgba';
 import { Rect } from './geometry';
-import SpriteSheet from './spriteSheet';
+import SpriteSheetManager from './spriteSheetManager';
 
 interface ITextLine {
 	text: string;
@@ -23,8 +23,8 @@ interface ILabelParams extends IMouseInteractiveParams {
 	wrapping?: Util.wrapping;
 	lineHeight?: number;
 	text?: string;
-	// Spritesheet for font glyphs
-	spriteSheet: SpriteSheet;
+	// SpritesheetManager for font glyphs
+	spriteSheetManager: SpriteSheetManager;
 }
 
 export default class Label extends MouseInteractive {
@@ -37,9 +37,8 @@ export default class Label extends MouseInteractive {
 	wrapping: Util.wrapping;
 	lineHeight: number;
 	frame: number;
-	fontData: Constants.IFontMap;
 	fontHeight: number;
-	spriteSheet: SpriteSheet;
+	spriteSheetManager: SpriteSheetManager;
 
 	constructor(params: ILabelParams) {
 		super(params);
@@ -53,9 +52,8 @@ export default class Label extends MouseInteractive {
 		this.wrapping = params.wrapping || 'none';
 		this.lineHeight = params.lineHeight || 8;
 		this.frame = 0;
-		this.fontData = Constants.FAWNT_7PT_MAP;
 		this.fontHeight = 7;
-		this.spriteSheet = params.spriteSheet;
+		this.spriteSheetManager = params.spriteSheetManager;
 		this.updateText();
 	}
 
@@ -68,16 +66,23 @@ export default class Label extends MouseInteractive {
 			let destRect = new Rect();
 			let srcRect = new Rect();
 			for (let j = 0; j < line.text.length; j++) {
-				const char = line.text[j];
-				const frame = this.spriteSheet.getFrame(char.toLowerCase());
+				const char = this.parseChar(line.text[j]);
+				const frameOutput = this.spriteSheetManager.getFrame("font7", char.toLowerCase());
 				destRect.x = drawX + linePosition.x;
 				destRect.y = linePosition.y;
-				destRect.w = frame.w;
-				destRect.h = frame.h;
-				drawTarget.pushDrawConcrete(destRect, this.spriteSheet.concrete, 1, RGBA.blank, frame);
-				drawX += frame.w;
+				destRect.w = frameOutput.frame.w;
+				destRect.h = frameOutput.frame.h;
+				drawTarget.pushDrawConcrete(destRect, frameOutput.context, 1, RGBA.blank, frameOutput.frame);
+				drawX += frameOutput.frame.w;
 			}
 		}
+	}
+
+	parseChar(char: string) {
+		if (char === " ") {
+			return "space";
+		}
+		return char;
 	}
 
 	updateText() {
@@ -225,7 +230,7 @@ export default class Label extends MouseInteractive {
 		text = text.toLowerCase();
 		var length = 0;
 		for (var i = 0; i < text.length; i++) {
-			length += this.fontData[text[i]].w;
+			length += this.spriteSheetManager.getFrame('font7', this.parseChar(text[i])).frame.w;
 		}
 		return length;
 	}

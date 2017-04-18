@@ -1,5 +1,5 @@
 import { IStringTMap } from '../../lib/util';
-import { Ability } from './ability';
+import Abilities, { Ability } from './ability';
 
 interface BestiaryEntry {
 	health: number;
@@ -23,18 +23,18 @@ const Bestiary: IStringTMap<BestiaryEntry> = {
 		willpower: 0,
 		intellect: 0,
 		
-		abilities: []
+		abilities: [Abilities.slash]
 	},
 	shroom2: {
 		health: 50,
 		speed: 25,
-		move: 2,
+		move: 7,
 		attack: 2,
 		defense: 2,
 		willpower: 2,
 		intellect: 2,
 		
-		abilities: []
+		abilities: [Abilities.slash]
 	}
 }
 

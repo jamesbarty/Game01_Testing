@@ -216,7 +216,7 @@ export default class MouseInteractive extends UiElement {
 			return;
 		}
 
-		console.log(`Element ${this.name} was clicked`);
+		//console.log(`Element ${this.name} was clicked`);
 		// On the way up
 		if (isFunction(this.onClick)) {
 			this.onClick(e);

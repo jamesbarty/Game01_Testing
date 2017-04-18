@@ -25,13 +25,13 @@ export default class MainMenuScreen extends MouseInteractive {
 	}
 
 	buildUi() {
-		const ss =  this.game.spriteSheets[Constants.SPRITESHEET_MAIN];
 		let background = new Bitmap({
-			spriteSheet: ss,
-			frameKey: "back",
+			spriteSheetManager: this.game.spriteSheetManager,
+			namespace: "tiles",
+			frameKey: "black",
 			size: {
-				width: ss.getFrame("back").w,
-				height: ss.getFrame("back").h
+				width: 16,
+				height: 16
 			}
 		});
 
@@ -61,7 +61,7 @@ export default class MainMenuScreen extends MouseInteractive {
 			},
 			hAlign: 'center',
 			styles: [RGBA.white, RGBA.lightGrey, RGBA.mediumGrey],
-			spriteSheet: this.game.spriteSheets[Constants.SPRITESHEET_MAIN]
+			spriteSheetManager: this.game.spriteSheetManager
 		});
 		btnNewGame.onClick = () => {
 			this.game.goToScreen(GameEngine.Screen.TacticsScreen);
@@ -79,7 +79,7 @@ export default class MainMenuScreen extends MouseInteractive {
 			},
 			hAlign: 'center',
 			styles: [RGBA.white, RGBA.lightGrey, RGBA.mediumGrey],
-			spriteSheet: ss
+			spriteSheetManager: this.game.spriteSheetManager
 		});
 
 		let title = new Label({
@@ -93,7 +93,7 @@ export default class MainMenuScreen extends MouseInteractive {
 				width: 100,
 				height: 30
 			},
-			spriteSheet: ss,
+			spriteSheetManager: this.game.spriteSheetManager,
 			wrapping: 'character',
 			textHAlign: 'center',
 			textVAlign: 'center'

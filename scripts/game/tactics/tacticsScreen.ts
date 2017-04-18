@@ -6,7 +6,7 @@ import GameEngine from '../gameEngine';
 import Label from '../../lib/label';
 import { Rect } from '../../lib/geometry';
 import RGBA from '../../lib/rgba';
-import SpriteSheet from '../../lib/spriteSheet';
+import SpriteSheetManager from '../../lib/spriteSheetManager';
 import { IStringTMap } from '../../lib/util';
 import * as Constants from '../../lib/constants';
 import { ITacticsMap, spawnPosition } from '../maps/maps';
@@ -15,21 +15,34 @@ import Bestiary from './bestiary';
 import Unit, { Team } from './unit';
 import Button from '../../lib/button';
 import Tile, { TileOverlay } from './tile';
+import InfoPanel from './infoPanel';
+import { Ability, AbilityInstance, RangeType, RangeDetails, ValidTarget } from './ability';
 
 type UnitData = IStringTMap<number>;
 
 enum GamePhase {
 	Placement,
 	Started,
-	PlayerTurn
+	EnemyTurn,
+	PlayerMoving,
+	PlayerTargeting
+}
+
+enum Direction {
+	Down,
+	Up,
+	Left,
+	Right
 }
 
 export default class TacticsScreen extends MouseInteractive {
 	private mapContainer: MouseInteractive;
 	private tileContainer: MouseInteractive;
 	private placementContainer: MouseInteractive;
+	private buttonContainer: ButtonContainer;
 	private placementItems: IStringTMap<PlacementItem>;
-	private infoPanel: MouseInteractive;
+	private activeInfoPanel: InfoPanel;
+	private tempInfoPanel: InfoPanel;
 	private tileMap: Tile[][];
 	private selectedTile: Tile;
 	private curMap: ITacticsMap;
@@ -39,6 +52,8 @@ export default class TacticsScreen extends MouseInteractive {
 	private maxTilesY: number;
 	private game: GameEngine;
 	private units: Unit[];
+	private activeUnit: Unit;
+	private activeAbility: AbilityInstance;
 	private gamePhase: GamePhase;
 	private actionTickDuration: number;
 	private actionTickCount: number;
@@ -64,6 +79,7 @@ export default class TacticsScreen extends MouseInteractive {
 		this.gamePhase = GamePhase.Placement;
 		this.mapContainer = null;
 		this.tileContainer = null;
+		this.buttonContainer = null;
 		this.placementContainer = null;
 		this.placementItems = {};
 		this.selectedTile = null;
@@ -72,6 +88,7 @@ export default class TacticsScreen extends MouseInteractive {
 		this.tileHeight = 16;
 		this.maxTilesX = 15;
 		this.maxTilesY = 15;
+		this.activeUnit = null;
 		this.actionTickDuration = 20;
 		this.actionTickCount = 0;
 		this.buildUi();
@@ -108,27 +125,87 @@ export default class TacticsScreen extends MouseInteractive {
 			},
 			size: {
 				width: Constants.LOGICAL_CANVAS_WIDTH - tileWidth * maxTilesX,
-				height: Math.floor(Constants.LOGICAL_CANVAS_HEIGHT / 2)
+				height: 111
 			}
 		});
 
-		this.infoPanel = new MouseInteractive({
+		this.activeInfoPanel = new InfoPanel({
 			name: 'TacticsScreen-infoPanel',
+			spriteSheetManager: this.game.spriteSheetManager,
 			position: {
 				left: tileWidth * maxTilesX,
-				top: Math.floor(Constants.LOGICAL_CANVAS_HEIGHT / 2),
+				top: 0,
 			},
 			size: {
 				width: Constants.LOGICAL_CANVAS_WIDTH - tileWidth * maxTilesX,
-				height: Math.floor(Constants.LOGICAL_CANVAS_HEIGHT / 2)
+				height: 111
+			},
+			bgColor: RGBA.lightGrey,
+			onAbilityClicked: this.onAbilityClicked
+		});
+
+		this.tempInfoPanel = new InfoPanel({
+			name: 'TacticsScreen-infoPanel',
+			spriteSheetManager: this.game.spriteSheetManager,
+			position: {
+				left: tileWidth * maxTilesX,
+				top: 129,
+			},
+			size: {
+				width: Constants.LOGICAL_CANVAS_WIDTH - tileWidth * maxTilesX,
+				height: 111
 			},
 			bgColor: RGBA.lightGrey
 		});
 
+		this.buttonContainer = new ButtonContainer({
+			name: 'TacticsScreen-buttonContainer',
+			position: {
+				left: tileWidth * maxTilesX,
+				top: 111
+			},
+			size: {
+				width: Constants.LOGICAL_CANVAS_WIDTH - tileWidth * maxTilesX,
+				height: 18
+			},
+			button1Click: this.onButton1Click,
+			button2Click: this.onButton2Click,
+			spriteSheetManager: this.game.spriteSheetManager
+		});
+
 		this.mapContainer.addChild(this.tileContainer);
 		this.addChild(this.mapContainer);
+		this.addChild(this.activeInfoPanel);
 		this.addChild(this.placementContainer);
-		this.addChild(this.infoPanel);
+		this.addChild(this.tempInfoPanel);
+		this.addChild(this.buttonContainer);
+	}
+
+	onButton1Click = () => {
+		switch(this.gamePhase) {
+			// Start game
+			case GamePhase.Placement:
+				this.startGame();
+				break;
+			// End turn
+			case GamePhase.PlayerMoving:
+				this.endTurn();
+				break;
+			// Cancel ability
+			case GamePhase.PlayerTargeting:
+				this.changePhase(GamePhase.PlayerMoving);
+				this.clearOverlays();
+				this.buildMovementOverlay(this.activeUnit);
+				break;
+		}
+	}
+
+	onButton2Click = () => {
+		switch(this.gamePhase) {
+			case GamePhase.Placement:
+				this.removeUnit();
+				break;
+		}
 	}
 
 	buildPlacement() {
@@ -137,7 +214,7 @@ export default class TacticsScreen extends MouseInteractive {
 		this.placementContainer.removeAllChildren();
 		const title = new Label({
 			text: "Units",
-			spriteSheet: game.spriteSheets[Constants.SPRITESHEET_MAIN],
+			spriteSheetManager: game.spriteSheetManager,
 			size: {
 				width: 104,
 				height: 20
@@ -155,7 +232,7 @@ export default class TacticsScreen extends MouseInteractive {
 			},
 			size: {
 				width: 104,
-				height: Math.floor(Constants.LOGICAL_CANVAS_HEIGHT / 2)
+				height: 111
 			}
 		});
 
@@ -170,7 +247,7 @@ export default class TacticsScreen extends MouseInteractive {
 					width: 104,
 					height: 9
 				},
-				spriteSheet: game.spriteSheets[Constants.SPRITESHEET_MAIN],
+				spriteSheetManager: game.spriteSheetManager,
 				unitName: unitName,
 				quantity: unitQty
 			});
@@ -183,113 +260,103 @@ export default class TacticsScreen extends MouseInteractive {
 			}
 		});
 
-		const startBtn = new Button({
-			text: "Start Game",
-			spriteSheet: this.game.spriteSheets[Constants.SPRITESHEET_MAIN],
-			size: {
-				width: this.placementContainer.size.width,
-				height: 9
-			},
-			styles: [RGBA.lightGrey, RGBA.mediumGrey, RGBA.darkGrey],
-			position: {
-				left: 0,
-				top: -9
-			},
-			vAlign: 'bottom'
-		});
-		startBtn.onClick = () => {
-			this.startGame();
-		}
-		const removeBtn = new Button({
-			text: "Remove Unit",
-			spriteSheet: this.game.spriteSheets[Constants.SPRITESHEET_MAIN],
-			size: {
-				width: this.placementContainer.size.width,
-				height: 9
-			},
-			styles: [RGBA.lightGrey, RGBA.mediumGrey, RGBA.darkGrey],
-			position: {
-				left: 0,
-				top: 0
-			},
-			vAlign: 'bottom'
-		});
-		removeBtn.onClick = () => {
-			this.removeUnit();
-		}
 
 		this.placementContainer.addChild(title);
 		this.placementContainer.addChild(placementItemContainer);
-		this.placementContainer.addChild(startBtn);
-		this.placementContainer.addChild(removeBtn);
 	}
 
-	populateInfoPanel(unit: Unit) {
-		const { game } = this;
-		this.infoPanel.removeAllChildren();
-		if (unit != null) {
-			const unitSprite = new Bitmap({
-				spriteSheet: game.spriteSheets[Constants.SPRITESHEET_MAIN],
-				frameKey: unit.unitName,
-				size: {
-					width: 12,
-					height: 12
-				},
-				position: {
-					left: 4,
-					top: 4
+	changePhase(newPhase: GamePhase) {
+		switch (this.gamePhase) {
+			case GamePhase.Placement:
+				switch (newPhase) {
+					case GamePhase.Placement:
+						break;
+					case GamePhase.Started:
+						this.buttonContainer.showButton1(false);
+						this.buttonContainer.showButton2(false);
+						break;
+					case GamePhase.PlayerMoving:
+						break;
+					case GamePhase.PlayerTargeting:
+						break;
 				}
-			});
-			const nameLabel = new Label({
-				text: unit.unitName,
-				spriteSheet: game.spriteSheets[Constants.SPRITESHEET_MAIN],
-				size: {
-					height: 12,
-					width: 80
-				},
-				position: {
-					left: 18,
-					top: 4
-				},
-				textVAlign: 'center',
-				bgColor: RGBA.blank
-			});
-
-			const healthLabel = new Label({
-				text: `HP: ${unit.health}/${unit.maxHealth}`,
-				spriteSheet: game.spriteSheets[Constants.SPRITESHEET_MAIN],
-				size: {
-					height: 9,
-					width: 80
-				},
-				position: {
-					left: 18,
-					top: 18
-				},
-				bgColor: RGBA.blank,
-				textVAlign: 'center'
-			});
-
-			const actionLabel = new Label({
-				text: `AP: ${unit.actionBar}/${Unit.maxActionBar}`,
-				spriteSheet: game.spriteSheets[Constants.SPRITESHEET_MAIN],
-				size: {
-					height: 9,
-					width: 80
-				},
-				position: {
-					left: 18,
-					top: 29
-				},
-				bgColor: RGBA.blank,
-				textVAlign: 'center'
-			});
-
-			this.infoPanel.addChild(unitSprite);
-			this.infoPanel.addChild(nameLabel);
-			this.infoPanel.addChild(healthLabel);
-			this.infoPanel.addChild(actionLabel);
+				break;
+			case GamePhase.Started:
+				switch (newPhase) {
+					case GamePhase.Placement:
+						break;
+					case GamePhase.Started:
+						this.buttonContainer.showButton1(false);
+						break;
+					case GamePhase.PlayerMoving:
+						this.buttonContainer.setButton1Text('End Turn');
+						this.buttonContainer.showButton1(true);
+						break;
+					case GamePhase.PlayerTargeting:
+						break;
+				}
+				break;
+			case GamePhase.PlayerMoving:
+				switch (newPhase) {
+					case GamePhase.Placement:
+						break;
+					case GamePhase.Started:
+						break;
+					case GamePhase.PlayerMoving:
+						break;
+					case GamePhase.PlayerTargeting:
+						this.buttonContainer.setButton1Text('Cancel');
+						break;
+				}
+				break;
+			case GamePhase.PlayerTargeting:
+				switch (newPhase) {
+					case GamePhase.Placement:
+						break;
+					case GamePhase.Started:
+						break;
+					case GamePhase.PlayerMoving:
+						this.buttonContainer.setButton1Text('End Turn');
+						break;
+					case GamePhase.PlayerTargeting:
+						break;
+				}
+				break;
 		}
+		this.gamePhase = newPhase;
+	}
+
+	onAbilityClicked = (ability: AbilityInstance) => {
+		if (this.gamePhase === GamePhase.PlayerMoving) {
+			this.changePhase(GamePhase.PlayerTargeting);
+			this.activeAbility = ability;
+			this.clearOverlays();
+			this.buildTargetOverlay(ability);
+		}
+	}
+
+	buildTargetOverlay(ability: AbilityInstance) {
+		let foundTile: Tile = null;
+		for (let r = 0; r < this.tileMap.length; r++) {
+			const row = this.tileMap[r];
+			for (let c = 0; c < row.length; c++) {
+				const tile = row[c];
+				if (tile.isOccupied() && tile.occupant === this.activeUnit) {
+					foundTile = tile;
+					break;
+				}
+			}
+		}
+		if (foundTile === null) {
+			console.error(`Could not find tile with that unit`);
+			return;
+		}
+
+		const { rangeType, range, self } = ability.castDetails;
+		const targetTiles = this.getTilesInRangeType(foundTile, ability.castDetails);
+		targetTiles.forEach(tile => {
+			tile.setOverlay(TileOverlay.Target);
+		});
 	}
 
 	initMap(newMap: ITacticsMap) {
@@ -307,7 +374,7 @@ export default class TacticsScreen extends MouseInteractive {
 				const tile = new Tile({
 					x: c,
 					y: r,
-					spriteSheet: game.spriteSheets[Constants.SPRITESHEET_MAIN],
+					spriteSheetManager: game.spriteSheetManager,
 					position: {
 						left: c * tileWidth,
 						top: r * tileHeight
@@ -320,11 +387,14 @@ export default class TacticsScreen extends MouseInteractive {
 				tile.setBackgroundFrame(frame);
 				tile.onMouseEnter = () => {
 					if (tile.isOccupied()) {
-						this.populateInfoPanel(tile.occupant);
+						this.tempInfoPanel.setUnit(tile.occupant);
 					}
 				};
 				tile.onMouseLeave = () => {
-					this.populateInfoPanel(null);
+					this.tempInfoPanel.setUnit(null);
+				};
+				tile.onClick = () => {
+					this.selectTile(tile);
 				};
 				this.tileMap[r][c] = tile;
 				tileContainer.addChild(tile);
@@ -337,9 +407,6 @@ export default class TacticsScreen extends MouseInteractive {
 			const spawn = curMap.spawns[i];
 			const targetTile = this.tileMap[spawn.y][spawn.x];
 			targetTile.setOverlay(TileOverlay.Spawn);
-			targetTile.onClick = () => {
-				this.selectTile(targetTile);
-			};
 		}
 
 		this.placeEnemies();
@@ -352,7 +419,7 @@ export default class TacticsScreen extends MouseInteractive {
 			const enemyUnit = new Unit({
 				team: Team.Enemy,
 				unitName: enemy.name,
-				spriteSheet: game.spriteSheets[Constants.SPRITESHEET_MAIN],
+				spriteSheetManager: game.spriteSheetManager,
 				size: {
 					width: tileWidth,
 					height: tileHeight
@@ -368,6 +435,149 @@ export default class TacticsScreen extends MouseInteractive {
 		}
 		this.selectedTile = tile;
 		tile.select();
+
+		switch (this.gamePhase) {
+			case GamePhase.PlayerMoving:
+				switch (tile.overlayType) {
+					case TileOverlay.MoveDown:
+						this.movePlayer(Direction.Down);
+						break;
+					case TileOverlay.MoveUp:
+						this.movePlayer(Direction.Up);
+						break;
+					case TileOverlay.MoveLeft:
+						this.movePlayer(Direction.Left);
+						break;
+					case TileOverlay.MoveRight:
+						this.movePlayer(Direction.Right);
+						break;
+				}
+				break;
+			case GamePhase.PlayerTargeting:
+				if (tile.overlayType === TileOverlay.Target) {
+					// check if valid target
+					const targetTiles = this.getTilesInRangeType(tile, this.activeAbility.targetDetails.rangeDetails);
+					const validTargets: Tile[] = [];
+					targetTiles.forEach(tile => {
+						if (this.isTargetTileValid(this.activeUnit, this.activeAbility, tile)) {
+							validTargets.push(tile);
+						}
+					});
+					// if we have a target then do shit
+					if (validTargets.length > 0) {
+						this.activeAbility.apply(this.activeUnit, validTargets);
+						this.endTurn();
+					}
+				}
+				break;
+		}
+	}
+
+	endTurn() {
+		this.activeUnit.endTurn();
+		this.activeInfoPanel.setUnit(null);
+		this.activeUnit = null;
+		this.activeAbility = null;
+		this.clearOverlays();
+		this.changePhase(GamePhase.Started);
+	}
+
+	isTargetTileValid(caster: Unit, ability: Ability, targetTile: Tile): boolean {
+		const { validTarget } = ability.targetDetails;
+		if (!targetTile.occupant) {
+			return validTarget === ValidTarget.Vacant;
+		}
+		const { occupant } = targetTile;
+		if (occupant === caster) {
+			switch (validTarget) {
+				case ValidTarget.Self:
+				case ValidTarget.SelfAlly:
+				case ValidTarget.SelfEnemy:
+					return true;
+				default:
+					return false;
+			}
+		}
+		else if (occupant.team === caster.team) {
+			switch (validTarget) {
+				case ValidTarget.Ally:
+				case ValidTarget.AllyEnemy:
+				case ValidTarget.SelfAlly:
+					return true;
+				default:
+					return false;
+			}
+		}
+		else if (occupant.team !== caster.team) {
+			switch (validTarget) {
+				case ValidTarget.Enemy:
+				case ValidTarget.AllyEnemy:
+				case ValidTarget.SelfEnemy:
+					return true;
+				default:
+					return false;
+			}
+		}
+		return true;
+	}
+
+	getTilesInRangeType(tile: Tile, rangeDetails: RangeDetails): Tile[] {
+		const { rangeType, range, self } = rangeDetails;
+		const tiles: Tile[] = [];
+		switch (rangeType) {
+			case RangeType.Bloom:
+				for (let r = 0; r < this.tileMap.length; r++) {
+					for (let c = 0; c < this.tileMap[0].length; c++) {
+						const t = this.tileMap[r][c];
+						const delta = Math.abs(tile.y - t.y) + Math.abs(tile.x - t.x);
+						if (delta <= range) {
+							if (delta === 0 && self === false) {
+								continue;
+							}
+							tiles.push(t);
+						}
+					}
+				}
+				break;
+		}
+		return tiles;
+	}
+
+	movePlayer(dir: Direction) {
+		const selTile = this.selectedTile;
+		let unit = null;
+		switch (dir) {
+			case Direction.Down:
+				unit = this.tileMap[selTile.y - 1][selTile.x].vacate();
+				selTile.occupy(unit);
+				break;
+			case Direction.Up:
+				unit = this.tileMap[selTile.y + 1][selTile.x].vacate();
+				selTile.occupy(unit);
+				break;
+			case Direction.Left:
+				unit = this.tileMap[selTile.y][selTile.x + 1].vacate();
+				selTile.occupy(unit);
+				break;
+			case Direction.Right:
+				unit = this.tileMap[selTile.y][selTile.x - 1].vacate();
+				selTile.occupy(unit);
+				break;
+		}
+		unit.moved();
+		this.clearOverlays();
+		this.buildMovementOverlay(unit);
+	}
+
+
+	clearOverlays() {
+		const { tileMap } = this;
+		for (let r = 0; r < tileMap.length; r++) {
+			for (let c = 0; c < tileMap[0].length; c++) {
+				const tile = tileMap[r][c];
+				tile.setOverlay(TileOverlay.None);
+			}
+		}
 	}
 
 	selectUnit(unit: string) {
@@ -385,7 +595,7 @@ export default class TacticsScreen extends MouseInteractive {
 				tile.occupy(new Unit({
 					team: Team.Player,
 					unitName: unit,
-					spriteSheet: game.spriteSheets[Constants.SPRITESHEET_MAIN],
+					spriteSheetManager: game.spriteSheetManager,
 					size: {
 						width: 16,
 						height: 16
@@ -414,7 +624,7 @@ export default class TacticsScreen extends MouseInteractive {
 		});
 
 		this.removeChild(this.placementContainer);
-		this.gamePhase = GamePhase.Started;
+		this.changePhase(GamePhase.Started);
 	}
 
 	removeUnit() {
@@ -436,11 +646,14 @@ export default class TacticsScreen extends MouseInteractive {
 				const unit = this.units[i];
 				if (unit.actionBar >= Unit.maxActionBar) {
 					// take turn
+					this.activeUnit = unit;
+					this.activeInfoPanel.setUnit(unit);
 					if (unit.team === Team.Enemy) {
 						this.performEnemyTurn(unit);
 					}
 					else {
-						this.gamePhase = GamePhase.PlayerTurn;
+						this.changePhase(GamePhase.PlayerMoving);
+						
 						// set info panel
 						this.buildMovementOverlay(unit);
 					}
@@ -458,7 +671,8 @@ export default class TacticsScreen extends MouseInteractive {
 	}
 
 	performEnemyTurn(unit: Unit) {
-		unit.actionBar = 0;
+		unit.endTurn();
+		this.activeInfoPanel.setUnit(null);
 		console.log('yo I went jk');
 	}
 
@@ -481,7 +695,21 @@ export default class TacticsScreen extends MouseInteractive {
 		const moveRange = unit.getMoveRange();
 		const tilesInRange = this.getTilesInRange(foundTile, moveRange);
 		tilesInRange.forEach(tile => {
-			tile.setOverlay(TileOverlay.Target);
+			if (this.isTileAbove(tile, foundTile)) {
+				tile.setOverlay(TileOverlay.MoveUp);
+			}
+			else if (this.isTileBelow(tile, foundTile)) {
+				tile.setOverlay(TileOverlay.MoveDown);
+			}
+			else if (this.isTileRightOf(tile, foundTile)) {
+				tile.setOverlay(TileOverlay.MoveRight);
+			}
+			else if (this.isTileLeftOf(tile, foundTile)) {
+				tile.setOverlay(TileOverlay.MoveLeft);
+			}
+			else {
+				tile.setOverlay(TileOverlay.MoveTarget);
+			}
 		});
 	}
 
@@ -531,10 +759,26 @@ export default class TacticsScreen extends MouseInteractive {
 		}
 		return neighbours;
 	}
+
+	isTileLeftOf(tile: Tile, targetTile: Tile) {
+		return tile.y === targetTile.y && tile.x === targetTile.x - 1;
+	}
+
+	isTileRightOf(tile: Tile, targetTile: Tile) {
+		return tile.y === targetTile.y && tile.x === targetTile.x + 1;
+	}
+
+	isTileAbove(tile: Tile, targetTile: Tile) {
+		return tile.y === targetTile.y - 1 && tile.x === targetTile.x;
+	}
+
+	isTileBelow(tile: Tile, targetTile: Tile) {
+		return tile.y === targetTile.y + 1 && tile.x === targetTile.x;
+	}
 }
 
 interface IPlacementItemParams extends IMouseInteractiveParams {
-	spriteSheet: SpriteSheet;
+	spriteSheetManager: SpriteSheetManager;
 	unitName: string;
 	quantity: number;
 }
@@ -548,7 +792,7 @@ class PlacementItem extends Button {
 	constructor(params: IPlacementItemParams) {
 		super(Object.assign(params, {
 			text: '',
-			spriteSheet: params.spriteSheet,
+			spriteSheetManager: params.spriteSheetManager,
 			styles: [RGBA.white, RGBA.lightGrey, RGBA.mediumGrey]
 		}));
 
@@ -556,7 +800,7 @@ class PlacementItem extends Button {
 		this.quantity = params.quantity;
 
 		this.unitLabel = new Label({
-			spriteSheet: this.spriteSheet,
+			spriteSheetManager: this.spriteSheetManager,
 			text: this.unitName,
 			size: {
 				width: 94,
@@ -570,7 +814,7 @@ class PlacementItem extends Button {
 		});
 
 		this.quantityLabel = new Label({
-			spriteSheet: this.spriteSheet,
+			spriteSheetManager: this.spriteSheetManager,
 			text: `x${this.quantity}`,
 			size: {
 				width: 94,
@@ -594,3 +838,77 @@ class PlacementItem extends Button {
 		this.quantityLabel.setText(`x${this.quantity}`);
 	}
 }
+
+interface IButtonContainerParams extends IMouseInteractiveParams {
+	button1Click: () => void;
+	button2Click: () => void;
+	spriteSheetManager: SpriteSheetManager;
+}
+
+class ButtonContainer extends MouseInteractive {
+	button1: Button;
+	button2: Button;
+	button1Click: () => void;
+	button2Click: () => void;
+	spriteSheetManager: SpriteSheetManager;
+
+	constructor(params: IButtonContainerParams) {
+		super(params);
+
+		this.button1Click = params.button1Click;
+		this.button2Click = params.button2Click;
+		this.spriteSheetManager = params.spriteSheetManager;
+
+		this.button1 = new Button({
+			size: {
+				width: this.size.width,
+				height: 9
+			},
+			spriteSheetManager: this.spriteSheetManager,
+			styles: [RGBA.lightGrey, RGBA.mediumGrey, RGBA.darkGrey],
+			text: 'Start Game'
+		});
+		this.button1.onClick = () => {
+			this.button1Click();
+		};
+
+		this.button2 = new Button({
+			position: {
+				top: 9,
+				left: 0
+			},
+			size: {
+				width: this.size.width,
+				height: 9
+			},
+			spriteSheetManager: this.spriteSheetManager,
+			styles: [RGBA.lightGrey, RGBA.mediumGrey, RGBA.darkGrey],
+			text: 'Remove Unit'
+		});
+		this.button2.onClick = () => {
+			this.button2Click();
+		};
+
+		this.addChild(this.button1);
+		this.addChild(this.button2);
+	}
+
+	setButton1Text(text: string) {
+		this.button1.setText(text);
+	}
+
+	setButton2Text(text: string) {
+		this.button2.setText(text);
+	}
+
+	showButton1(show: boolean) {
+		this.button1.show(show);
+		this.button1.enable(show);
+	}
+
+	showButton2(show: boolean) {
+		this.button2.show(show);
+		this.button1.enable(show);
+	}
+}
+

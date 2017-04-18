@@ -398,23 +398,24 @@ int dumpBitmap(const Pixel* const bufferData, size_t numSheet)
 /**
  * @returns 0 iff success
  */
-int dumpJson(const SpriteList*const allSprites, int numFile)
+int dumpJs(const SpriteList*const allSprites, int numFile)
 {
-	FILE* file = fopen("SheetMeta.json", "w");
-	fprintf(file, "{\n");
+	FILE* file = fopen("SheetMeta.js", "w");
+	fprintf(file, "var sheetMeta = {\n");
+	fprintf(file, "\t\"_numSheets\": %d,\n", numFile);
 	for(int i = 0; i < numFile; ++i)
 	{
-		fprintf(file, "\"%s\":{\n", allSprites[i].fileStub);
+		fprintf(file, "\t\"%s\":{\n", allSprites[i].fileStub);
 		for(size_t j = 0; j < allSprites[i].numSprite; ++j)
 		{
 			const Sprite* const s = allSprites[i].sprites + j;
 			fprintf(file,
-			        "\t\"%s\":{\n\t\t\"sheet\" : %u ,\n\t\t\"x\" : %u ,\n\t\t\"y\" : %u ,\n\t\t\"w\" : %u ,\n\t\t\"h\" : %u\n\t}%c\n",
+			        "\t\t\"%s\":{\n\t\t\t\"sheet\" : %u ,\n\t\t\t\"x\" : %u ,\n\t\t\t\"y\" : %u ,\n\t\t\t\"w\" : %u ,\n\t\t\t\"h\" : %u\n\t\t}%c\n",
 			        s->name, s->destSheet, s->destX, s->destY, s->w, s->h, (j == allSprites[i].numSprite - 1) ? ' ' : ',');
 		}
-		fprintf(file, "}%c\n", (i == numFile-1) ? ' ' : ',');
+		fprintf(file, "\t}%c\n", (i == numFile-1) ? ' ' : ',');
 	}
-	fprintf(file, "}\n");
+	fprintf(file, "};\n");
 	fclose(file);
 	return 0;
 }
@@ -686,7 +687,7 @@ int main(int argc, char* argv[])
 						loadBitmap(fileSprite + (i-1), bitmapData);
 					}
 					dumpBitmap(bitmapData, numSheetsRequired);
-					dumpJson(fileSprite, argc-1);
+					dumpJs(fileSprite, argc-1);
 					free(bitmapData);
 				}
 				else

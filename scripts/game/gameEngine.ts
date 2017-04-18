@@ -8,7 +8,7 @@ import CoreGfxEng from "../lib/coreGfxEng";
 import { Rect } from "../lib/geometry";
 import { imageManager } from '../lib/imageManager';
 import RGBA from "../lib/rgba";
-import SpriteSheet from '../lib/spriteSheet';
+import SpriteSheetManager from '../lib/spriteSheetManager';
 import MouseEvt from '../lib/mouseEvent';
 import * as constants from "../lib/constants";
 import { IStringTMap } from '../lib/util';
@@ -29,7 +29,7 @@ enum Screen {
 export default class GameEngine {
 	private canvas: HTMLCanvasElement;
 	private gfxEng: CoreGfxEng;
-	spriteSheets: IStringTMap<SpriteSheet>;
+	spriteSheetManager: SpriteSheetManager;
 	private rootElement: MouseInteractive;
 	private rootLogicalConcrete: DrawConcreteContext;
 	screens: IStringTMap<Screen>;
@@ -47,44 +47,16 @@ export default class GameEngine {
 		this.canvas.height = constants.LOGICAL_CANVAS_HEIGHT * constants.LOGICAL_PIXEL_EDGE;
 		this.canvas.style.left = Math.floor(window.innerWidth / 2 - this.canvas.width / 2) + 'px';
 		document.body.appendChild(this.canvas);
-
+		
 		this.canvas.addEventListener('mousedown', this.onMouseDown);
 		this.canvas.addEventListener('mouseup', this.onMouseUp);
 		this.canvas.addEventListener('mousemove', this.onMouseMove);
 		this.canvas.oncontextmenu = function () { return false };
+		this.canvas.onmousewheel = function() { return false };
 
 		this.gfxEng = new CoreGfxEng(this.canvas);
 
-		this.spriteSheets = {};
-		this.spriteSheets[constants.SPRITESHEET_MAIN] = new SpriteSheet({
-			source: imageManager.imageMap['spritesheet'],
-			engine: this.gfxEng
-		});
-		let framez = constants.FAWNT_7PT_MAP;
-		framez["back"] = new Rect(0, 7, 294, 196);
-		framez["dirt"] = new Rect(0, 203, 16, 16);
-		framez["grass"] = new Rect(16, 203, 16, 16);
-		framez["black"] = new Rect(32, 203, 16, 16);
-		framez["left_up"] = new Rect(48, 203, 16, 16);
-		framez["left_down"] = new Rect(64, 203, 16, 16);
-		framez["up_up"] = new Rect(80, 203, 16, 16);
-		framez["up_down"] = new Rect(96, 203, 16, 16);
-		framez["right_up"] = new Rect(112, 203, 16, 16);
-		framez["right_down"] = new Rect(128, 203, 16, 16);
-		framez["down_up"] = new Rect(144, 203, 16, 16);
-		framez["down_down"] = new Rect(160, 203, 16, 16);
-		framez["spawn"] = new Rect(0, 219, 16, 16);
-		framez["spawnHighlight"] = new Rect(16, 219, 16, 16);
-		framez["spawnHighlightOccupied"] = new Rect(32, 219, 16, 16);
-		framez["frame"] = new Rect(176, 203, 16, 16);
-		framez["shroom"] = new Rect(192, 203, 12, 12);
-		framez["shroom2"] = new Rect(204, 203, 12, 12);
-		this.spriteSheets[constants.SPRITESHEET_MAIN].loadFrames({
-			frames: constants.FAWNT_7PT_MAP,
-			animations: {
-
-			}
-		})
+		this.spriteSheetManager = new SpriteSheetManager((window as any).sheetMeta, this.gfxEng);
 
 		this.rootElement = new MouseInteractive({
 			name: 'toplevel',

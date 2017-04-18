@@ -99,7 +99,6 @@ export default class WorldMapScreen extends MouseInteractive {
 
 	buildUiNav() {
 		let navStyles = [RGBA.red, RGBA.green, RGBA.blue];
-		let ss = this.game.spriteSheets[Constants.SPRITESHEET_MAIN];
 		let navBtnSize = {
 			width: 16,
 			height: 16
@@ -119,18 +118,20 @@ export default class WorldMapScreen extends MouseInteractive {
 		});
 
 		let btnNDownBitmap = new Bitmap({
-			spriteSheet: ss,
+			spriteSheetManager: this.game.spriteSheetManager,
+			namespace: "arrowbuttons",
 			frameKey: 'up_down'
 		});
 		let btnNUpBitmap = new Bitmap({
-			spriteSheet: ss,
+			spriteSheetManager: this.game.spriteSheetManager,
+			namespace: "arrowbuttons",
 			frameKey: 'up_up'
 		});
 		let btnN = new Button({
 			name: 'btnN',
 			text: '',
 			styles: [btnNUpBitmap, btnNUpBitmap, btnNDownBitmap],
-			spriteSheet: ss,
+			spriteSheetManager: this.game.spriteSheetManager,
 			size: navBtnSize,
 			hAlign: 'center',
 			vAlign: 'top'
@@ -143,18 +144,20 @@ export default class WorldMapScreen extends MouseInteractive {
 		};
 
 		let btnWDownBitmap = new Bitmap({
-			spriteSheet: ss,
+			spriteSheetManager: this.game.spriteSheetManager,
+			namespace: "arrowbuttons",
 			frameKey: 'left_down'
 		});
 		let btnWUpBitmap = new Bitmap({
-			spriteSheet: ss,
+			spriteSheetManager: this.game.spriteSheetManager,
+			namespace: "arrowbuttons",
 			frameKey: 'left_up'
 		});
 		let btnW = new Button({
 			name: 'btnW',
 			text: '',
 			styles: [btnWUpBitmap, btnWUpBitmap, btnWDownBitmap],
-			spriteSheet: ss,
+			spriteSheetManager: this.game.spriteSheetManager,
 			size: navBtnSize,
 			hAlign: 'left',
 			vAlign: 'center'
@@ -167,18 +170,20 @@ export default class WorldMapScreen extends MouseInteractive {
 		};
 
 		let btnEDownBitmap = new Bitmap({
-			spriteSheet: ss,
+			spriteSheetManager: this.game.spriteSheetManager,
+			namespace: "arrowbuttons",
 			frameKey: 'right_down'
 		});
 		let btnEUpBitmap = new Bitmap({
-			spriteSheet: ss,
+			spriteSheetManager: this.game.spriteSheetManager,
+			namespace: "arrowbuttons",
 			frameKey: 'right_up'
 		});
 		let btnE = new Button({
 			name: 'btnE',
 			text: '',
 			styles: [btnEUpBitmap, btnEUpBitmap, btnEDownBitmap],
-			spriteSheet: ss,
+			spriteSheetManager: this.game.spriteSheetManager,
 			size: navBtnSize,
 			hAlign: 'right',
 			vAlign: 'center'
@@ -191,18 +196,20 @@ export default class WorldMapScreen extends MouseInteractive {
 		};
 
 		let btnSDownBitmap = new Bitmap({
-			spriteSheet: ss,
+			spriteSheetManager: this.game.spriteSheetManager,
+			namespace: "arrowbuttons",
 			frameKey: 'down_down'
 		});
 		let btnSUpBitmap = new Bitmap({
-			spriteSheet: ss,
+			spriteSheetManager: this.game.spriteSheetManager,
+			namespace: "arrowbuttons",
 			frameKey: 'down_up'
 		});
 		let btnS = new Button({
 			name: 'btnS',
 			text: '',
 			styles: [btnSUpBitmap, btnSUpBitmap, btnSDownBitmap],
-			spriteSheet: ss,
+			spriteSheetManager: this.game.spriteSheetManager,
 			size: navBtnSize,
 			hAlign: 'center',
 			vAlign: 'bottom'
@@ -255,7 +262,8 @@ export default class WorldMapScreen extends MouseInteractive {
 				let mapCol = this.playerX + c - Math.floor((mapWidth + 2) / 2);
 				let frame = mapRow >= 0 && mapRow < curMap.height && mapCol >= 0 && mapCol < curMap.width ? curMap.map[mapRow][mapCol] : "black";
 				this.tileMap[r][c] = new Bitmap({
-					spriteSheet: game.spriteSheets[Constants.SPRITESHEET_MAIN],
+					spriteSheetManager: this.game.spriteSheetManager,
+					namespace: "tiles",
 					frameKey: frame,
 					position: {
 						left: c * tileWidth,
@@ -275,8 +283,9 @@ export default class WorldMapScreen extends MouseInteractive {
 
 		let player = new Bitmap({
 			name: 'player',
-			spriteSheet: game.spriteSheets[Constants.SPRITESHEET_MAIN],
-			frameKey: 'back',
+			spriteSheetManager: this.game.spriteSheetManager,
+			namespace: "tiles",
+			frameKey: "black",
 			position: {
 				top:  Math.floor(mapHeight / 2) * tileHeight,
 				left: Math.floor(mapWidth / 2) * tileWidth
@@ -363,7 +372,7 @@ export default class WorldMapScreen extends MouseInteractive {
 				if (!frame){
 					console.log(`Bad position: x=${mapCol}, y=${mapCol}`)
 				}
-				tileMap[r][c].setFrame(frame);
+				tileMap[r][c].setFrame("tiles", frame);
 			}
 		}
 

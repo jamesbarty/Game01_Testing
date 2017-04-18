@@ -5,7 +5,8 @@ import DrawTarget from '../../lib/drawTarget';
 import DrawThroughContext from '../../lib/drawThroughContext';
 import { Rect } from '../../lib/geometry';
 import RGBA from '../../lib/rgba';
-import SpriteSheet from '../../lib/spriteSheet';
+import SpriteSheetManager from '../../lib/spriteSheetManager';
+import { AbilityInstance } from './ability';
 
 export enum Team {
 	Player,
@@ -14,7 +15,7 @@ export enum Team {
 
 interface IUnitParams extends IMouseInteractiveParams {
 	unitName: string;
-	spriteSheet: SpriteSheet;
+	spriteSheetManager: SpriteSheetManager;
 	team: Team;
 }
 
@@ -31,10 +32,12 @@ export default class Unit extends MouseInteractive {
 
 	speed: number;
 	move: number;
+	curMove: number;
 	attack: number;
 	defense: number;
 	intellect: number;
 	willpower: number;
+	abilities: AbilityInstance[];
 
 	protected picture: Bitmap;
 	protected frame: Bitmap;
@@ -44,10 +47,12 @@ export default class Unit extends MouseInteractive {
 
 		this.team = params.team;
 		this.unitName = params.unitName;
+		this.abilities = [];
 		this.loadStats();
 
 		this.picture = new Bitmap({
-			spriteSheet: params.spriteSheet,
+			spriteSheetManager: params.spriteSheetManager,
+			namespace: "tactics",
 			frameKey: this.unitName,
 			position: {
 				top: 0,
@@ -59,7 +64,8 @@ export default class Unit extends MouseInteractive {
 			}
 		});
 		this.frame = new Bitmap({
-			spriteSheet: params.spriteSheet,
+			spriteSheetManager: params.spriteSheetManager,
+			namespace: "tactics",
 			frameKey: "frame",
 			size: {
 				width: 16,
@@ -80,11 +86,15 @@ export default class Unit extends MouseInteractive {
 		this.maxHealth = bestiaryEntry.health;
 		this.actionBar = 0;
 		this.speed = bestiaryEntry.speed;
-		this.move = bestiaryEntry.move;
+		this.move = this.curMove = bestiaryEntry.move;
 		this.attack = bestiaryEntry.attack;
 		this.defense = bestiaryEntry.defense;
 		this.intellect = bestiaryEntry.intellect;
 		this.willpower = bestiaryEntry.willpower;
+
+		bestiaryEntry.abilities.forEach(ability => {
+			this.abilities.push(new AbilityInstance(ability));
+		});
 	}
 
 	draw(drawTarget: DrawTarget) {
@@ -102,6 +112,15 @@ export default class Unit extends MouseInteractive {
 	}
 
 	getMoveRange() {
-		return this.move;
+		return this.curMove;
+	}
+
+	moved() {
+		this.curMove -= 1;
+	}
+
+	endTurn() {
+		this.actionBar = 0;
+		this.curMove = this.move; 
 	}
 }

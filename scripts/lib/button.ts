@@ -6,12 +6,12 @@ import DrawThroughContext from './drawThroughContext';
 import RGBA from './rgba';
 import Bitmap from './bitmap';
 import { Rect } from './geometry';
-import SpriteSheet from './spriteSheet';
+import SpriteSheetManager from './spriteSheetManager';
 
 export interface IButtonParams extends IMouseInteractiveParams {
 	text: string;
 	styles: RGBA[] | Bitmap[];
-	spriteSheet: SpriteSheet;
+	spriteSheetManager: SpriteSheetManager;
 }
 
 const enum ButtonStates {
@@ -24,12 +24,12 @@ export default class Button extends MouseInteractive {
 	label: Label;
 	state: ButtonStates;
 	styles: RGBA[] | Bitmap[];
-	spriteSheet: SpriteSheet;
+	spriteSheetManager: SpriteSheetManager;
 
 	constructor(params: IButtonParams) {
 		super(params);
 
-		this.spriteSheet = params.spriteSheet;
+		this.spriteSheetManager = params.spriteSheetManager;
 		this.state = ButtonStates.none; // none, hover, active
 		this.styles = params.styles || [new RGBA(255, 255, 255), new RGBA(128, 128, 128), RGBA.red];
 
@@ -44,7 +44,7 @@ export default class Button extends MouseInteractive {
 			textHAlign: 'center',
 			textVAlign: 'center',
 			wrapping: 'none',
-			spriteSheet: this.spriteSheet
+			spriteSheetManager: this.spriteSheetManager
 		});
 	}
 
@@ -90,6 +90,10 @@ export default class Button extends MouseInteractive {
 		}
 		const l = this.label;
 		l.draw(new DrawThroughContext(drawTarget, l.truePosition.left, l.truePosition.top, l.size.width, l.size.height));
+	}
+
+	setText(text: string) {
+		this.label.setText(text);
 	}
 
 	onButtonDown() {
