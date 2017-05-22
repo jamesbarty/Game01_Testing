@@ -1,2 +1,5 @@
 # Game01_Testing
-Dolla Bills
+
+scripts/lib contains the reusable canvas library
+
+scripts/game contains sample implementation code
